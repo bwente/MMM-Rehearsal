@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#11110f">
+  <title>Rehearsal</title>
+  <link rel="stylesheet" href="/rehearsal/assets/controller.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/rehearsal" aria-label="Rehearsal home"><span class="brand__mark">R</span><span>Rehearsal</span></a>
+    <div class="connection"><span id="connectionDot"></span><span id="connectionText" data-i18n="CONNECTING">Connecting</span></div>
+  </header>
+
+  <main class="shell">
+    <section id="editorView" class="view">
+      <div class="hero">
+        <p class="eyebrow" data-i18n="STUDIO">MagicMirror rehearsal studio</p>
+        <h1 data-i18n="WHAT_REHEARSING">What are you rehearsing?</h1>
+        <p data-i18n="HERO_HELP">Write or choose a script. Your mirror stays focused while this device handles everything else.</p>
+      </div>
+
+      <div class="workspace">
+        <form id="scriptForm" class="card editor-card">
+          <input id="scriptId" type="hidden">
+          <label class="field field--title"><span data-i18n="TITLE">Title</span><input id="title" maxlength="160" placeholder="Quarterly update" data-i18n-placeholder="TITLE_PLACEHOLDER" required></label>
+          <label class="field"><span data-i18n="SCRIPT">Script</span><textarea id="scriptText" placeholder="Paste or write your script here…" data-i18n-placeholder="SCRIPT_PLACEHOLDER" required></textarea></label>
+          <div class="editor-meta">
+            <label class="field"><span data-i18n="TARGET_TIME">Target time</span><input id="target" type="text" inputmode="numeric" placeholder="5:00" pattern="[0-9]+(:[0-5][0-9])?"></label>
+            <label class="field"><span data-i18n="NOTES">Notes (optional)</span><input id="notes" placeholder="Purpose, audience, reminders…" data-i18n-placeholder="NOTES_PLACEHOLDER"></label>
+          </div>
+          <div class="editor-actions">
+            <button id="newScript" class="button button--quiet" type="button" data-i18n="NEW">New</button>
+            <button id="saveScript" class="button button--secondary" type="submit" data-i18n="SAVE_SCRIPT">Save script</button>
+            <button id="startFromEditor" class="button button--primary" type="button"><span data-i18n="START_REHEARSAL">Start rehearsal</span> <span>→</span></button>
+          </div>
+        </form>
+
+        <aside class="card library-card">
+          <div class="card-heading"><div><p class="eyebrow" data-i18n="LIBRARY">Library</p><h2 data-i18n="YOUR_SCRIPTS">Your scripts</h2></div><span id="scriptCount" class="count">0</span></div>
+          <div id="library" class="library"><div class="empty">Saved scripts will appear here.</div></div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="sessionView" class="view" hidden>
+      <div class="session-head">
+        <div><p class="eyebrow" data-i18n="NOW_REHEARSING">Now rehearsing</p><h1 id="sessionTitle">Untitled script</h1></div>
+        <button id="endSession" class="button button--danger" data-i18n="END">End</button>
+      </div>
+
+      <div class="session-grid">
+        <section class="card remote-card">
+          <div class="status-row">
+            <div id="sessionStatus" class="session-status"><span></span> Ready</div>
+            <div id="sessionTime" class="clock">0:00</div>
+          </div>
+          <div class="progress-track"><span id="progressBar"></span></div>
+          <p id="currentText" class="current-text">Press start when you are ready.</p>
+          <input id="positionSlider" class="position-slider" type="range" min="0" max="0" value="0" aria-label="Script position">
+          <div class="transport">
+            <button id="jumpBack" class="round-button" aria-label="Jump backward">−10</button>
+            <button id="mainControl" class="main-control">Start</button>
+            <button id="jumpForward" class="round-button" aria-label="Jump forward">+10</button>
+            <button id="restart" class="round-button" aria-label="Restart">↺</button>
+          </div>
+        </section>
+
+        <aside class="card tools-card">
+          <div class="tool-row"><div><strong data-i18n="MIC_TRACKING">Microphone tracking</strong><small id="micHelp" data-i18n="MIC_HELP">Follow your voice through the script</small></div><label class="switch"><input id="micToggle" type="checkbox" checked><span></span></label></div>
+          <div class="tool-row"><div><strong data-i18n="AUTO_TELEPROMPTER">Automatic teleprompter</strong><small id="autoPaceHelp" data-i18n="AUTO_HELP">Advance at a steady speaking pace</small></div><label class="switch"><input id="autoPaceToggle" type="checkbox"><span></span></label></div>
+          <div id="paceRow" class="tool-row"><div><strong data-i18n="SPEAKING_PACE">Speaking pace</strong><small data-i18n="PACE_HELP">Used when no target time is set</small></div><div class="stepper"><button id="paceDown">−</button><output id="paceWpm">130</output><button id="paceUp">+</button></div></div>
+          <div class="tool-row"><div><strong data-i18n="AUTO_END">Auto end</strong><small data-i18n="AUTO_END_HELP">Finish two seconds after the final line</small></div><label class="switch"><input id="autoEndToggle" type="checkbox" checked><span></span></label></div>
+          <div class="tool-row"><div><strong data-i18n="TEXT_SIZE">Text size</strong><small data-i18n="TEXT_SIZE_HELP">Adjust the mirror display</small></div><div class="stepper"><button id="fontDown">−</button><output id="fontSize">54</output><button id="fontUp">+</button></div></div>
+          <div class="transcript-box"><span data-i18n="HEARD">Heard</span><p id="transcript" data-i18n="WAITING_SPEECH">Waiting for speech…</p><div id="confidence" class="confidence"></div></div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="summaryView" class="view" hidden>
+      <div class="summary card">
+        <div class="summary__mark">✓</div><p class="eyebrow" data-i18n="REHEARSAL_COMPLETE">Rehearsal complete</p><h1 id="summaryTitle" data-i18n="NICE_WORK">Nice work.</h1>
+        <div class="metrics">
+          <div><span data-i18n="DURATION">Duration</span><strong id="metricDuration">0:00</strong></div>
+          <div><span data-i18n="TARGET">Target</span><strong id="metricTarget">—</strong></div>
+          <div><span data-i18n="AVERAGE_PACE">Average pace</span><strong id="metricPace">0 WPM</strong></div>
+          <div><span data-i18n="LONGEST_PAUSE">Longest pause</span><strong id="metricPause">0.0 sec</strong></div>
+          <div><span data-i18n="SCRIPT_COVERED">Script covered</span><strong id="metricCoverage">0%</strong></div>
+        </div>
+        <div class="summary-actions"><button id="rehearseAgain" class="button button--secondary" data-i18n="REHEARSE_AGAIN">Rehearse again</button><button id="backToScripts" class="button button--primary" data-i18n="BACK_TO_SCRIPTS">Back to scripts</button></div>
+      </div>
+    </section>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="/rehearsal/assets/controller.js" type="module"></script>
+</body>
+</html>
