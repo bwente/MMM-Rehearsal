@@ -1,12 +1,12 @@
 # MMM-Rehearsal
 
-MMM-Rehearsal turns a MagicMirror² display into a focused rehearsal screen. Editing, microphone input, controls, and the post-rehearsal review live on a phone or laptop; the mirror only shows the performance view.
+MMM-Rehearsal turns a MagicMirror² display into a rehearsal screen. Editing, microphone input, controls, and the post-rehearsal review using your phone or laptop on your local network; the mirror only shows the script.
 
 ![MMM-Rehearsal running on a MagicMirror while the script is managed from a phone](docs/images/mmm-rehearsal-hero.png)
 
 ## Experience
 
-The browser controller keeps script preparation and rehearsal controls away from the performance display.
+The browser controller keeps script and rehearsal controls away from the practice display.
 
 | Script editor and library | Live rehearsal controls |
 | --- | --- |
