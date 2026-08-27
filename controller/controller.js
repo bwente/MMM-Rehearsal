@@ -25,9 +25,41 @@ let paceWpm = 130;
 let autoPaceAnchor = { elapsed: 0, position: 0 };
 let autoEndTimer = null;
 let endingSession = false;
+const preferenceKey = "mmm-rehearsal-preferences";
+const defaultPreferences = { microphone: true, autoPace: false, autoEnd: true, fontSize: 54, paceWpm: 130 };
 
 function t(key) {
   return messages[key] || key;
+}
+
+function readPreferences() {
+  try {
+    return { ...defaultPreferences, ...JSON.parse(localStorage.getItem(preferenceKey) || "{}") };
+  } catch (_error) {
+    return { ...defaultPreferences };
+  }
+}
+
+function applyPreferences(preferences = readPreferences()) {
+  fontSize = Math.max(28, Math.min(72, Number(preferences.fontSize) || defaultPreferences.fontSize));
+  paceWpm = Math.max(60, Math.min(220, Number(preferences.paceWpm) || defaultPreferences.paceWpm));
+  $("#micToggle").checked = preferences.microphone !== false;
+  $("#autoPaceToggle").checked = Boolean(preferences.autoPace) && !$("#micToggle").checked;
+  $("#autoEndToggle").checked = preferences.autoEnd !== false;
+  $("#fontSize").value = fontSize;
+  $("#paceWpm").value = paceWpm;
+}
+
+function savePreferences() {
+  try {
+    localStorage.setItem(preferenceKey, JSON.stringify({
+      microphone: $("#micToggle").checked,
+      autoPace: $("#autoPaceToggle").checked,
+      autoEnd: $("#autoEndToggle").checked,
+      fontSize,
+      paceWpm
+    }));
+  } catch (_error) {}
 }
 
 async function loadTranslations() {
@@ -205,12 +237,57 @@ async function prepareSession() {
   transcriptBuffer = []; longestPause = 0; lastSpeechAt = 0; lastSyncedSecond = -1; endingSession = false; cancelAutoEnd();
   state = { status: "ready", position: 0, elapsed: 0 };
   await send("load", { script: activeScript });
+  await send("settings", { settings: { fontSize } }, false);
   $("#sessionTitle").textContent = activeScript.title;
   $("#positionSlider").max = Math.max(0, parsed.words.length - 1);
   $("#positionSlider").value = 0;
   autoPaceAnchor = { elapsed: 0, position: 0 };
   updateAutoPaceHelp();
   updateSession(); showView($("#sessionView"));
+}
+
+function showSummary(summary = {}) {
+  $("#summaryTitle").textContent = t("NICE_WORK");
+  $("#metricDuration").textContent = formatTime(summary.duration);
+  $("#metricTarget").textContent = summary.target ? formatTime(summary.target) : "—";
+  $("#metricPace").textContent = `${Number(summary.pace) || 0} ${t("WPM")}`;
+  $("#metricPause").textContent = `${(Number(summary.longestPause) || 0).toFixed(1)} ${t("SECONDS_SHORT")}`;
+  $("#metricCoverage").textContent = `${Number(summary.coverage) || 0}%`;
+  showView($("#summaryView"));
+}
+
+function recoverSession(serverState) {
+  if (!serverState?.script || serverState.status === "idle") return false;
+  activeScript = serverState.script;
+  parsed = parseScript(activeScript.text);
+  if (!parsed.words.length) return false;
+
+  state = { ...serverState };
+  state.position = Math.max(0, Math.min(parsed.words.length - 1, Number(state.position) || 0));
+  if (state.status === "running" && state.startedAt) {
+    state.elapsed = Math.max(0, Math.floor((Date.now() - Number(state.startedAt)) / 1000));
+  }
+  startedAt = Date.now() - (Number(state.elapsed) || 0) * 1000;
+  longestPause = Number(state.metrics?.longestPause) || Number(state.summary?.longestPause) || 0;
+  fontSize = Math.max(28, Math.min(72, Number(state.displaySettings?.fontSize) || fontSize));
+  $("#fontSize").value = fontSize;
+  savePreferences();
+
+  $("#sessionTitle").textContent = activeScript.title;
+  $("#positionSlider").max = Math.max(0, parsed.words.length - 1);
+  $("#positionSlider").value = state.position;
+  autoPaceAnchor = { elapsed: Number(state.elapsed) || 0, position: state.position };
+  updateAutoPaceHelp();
+
+  if (state.status === "complete") {
+    showSummary(state.summary || {});
+  } else {
+    updateSession();
+    showView($("#sessionView"));
+    if (state.status === "running") startTimer();
+    scheduleAutoEnd();
+  }
+  return true;
 }
 
 async function toggleSession() {
@@ -319,9 +396,7 @@ async function endSession() {
   const pace = state.elapsed ? Math.round(((state.position + 1) / state.elapsed) * 60) : 0;
   const summary = { duration: state.elapsed, target: activeScript?.target || 0, pace, longestPause, coverage };
   await send("stop", { elapsed: state.elapsed, summary });
-  $("#summaryTitle").textContent = t("NICE_WORK");
-  $("#metricDuration").textContent = formatTime(summary.duration); $("#metricTarget").textContent = summary.target ? formatTime(summary.target) : "—"; $("#metricPace").textContent = `${summary.pace} ${t("WPM")}`; $("#metricPause").textContent = `${summary.longestPause.toFixed(1)} ${t("SECONDS_SHORT")}`; $("#metricCoverage").textContent = `${summary.coverage}%`;
-  showView($("#summaryView"));
+  showSummary(summary);
 }
 
 async function enableMicrophone(enabled) {
@@ -380,16 +455,18 @@ $("#jumpBack").onclick = () => movePosition(state.position - 10);
 $("#jumpForward").onclick = () => movePosition(state.position + 10);
 $("#restart").onclick = restartSession;
 $("#positionSlider").oninput = (event) => movePosition(Number(event.target.value));
-$("#micToggle").onchange = (event) => enableMicrophone(event.target.checked);
+$("#micToggle").onchange = (event) => { savePreferences(); enableMicrophone(event.target.checked); };
 $("#autoPaceToggle").onchange = (event) => {
   if (event.target.checked) {
     $("#micToggle").checked = false;
     stopRecognition();
     autoPaceAnchor = { elapsed: elapsed(), position: state.position };
   }
+  savePreferences();
   updateSession();
 };
 $("#autoEndToggle").onchange = (event) => {
+  savePreferences();
   if (event.target.checked) scheduleAutoEnd();
   else cancelAutoEnd();
 };
@@ -401,12 +478,13 @@ $("#endSession").onclick = endSession;
 $("#rehearseAgain").onclick = () => { cancelAutoEnd(); endingSession = false; state.status = "ready"; state.position = 0; state.elapsed = 0; send("load", { script: activeScript }); updateSession(); showView($("#sessionView")); };
 $("#backToScripts").onclick = () => { showView($("#editorView")); loadLibrary(); };
 
-function changeFont(delta) { fontSize = Math.max(28, Math.min(72, fontSize + delta)); $("#fontSize").value = fontSize; send("settings", { settings: { fontSize } }, false); }
+function changeFont(delta) { fontSize = Math.max(28, Math.min(72, fontSize + delta)); $("#fontSize").value = fontSize; savePreferences(); send("settings", { settings: { fontSize } }, false); }
 
 function changePace(delta) {
   if (activeScript?.target) return;
   paceWpm = Math.max(60, Math.min(220, paceWpm + delta));
   $("#paceWpm").value = paceWpm;
+  savePreferences();
   autoPaceAnchor = { elapsed: elapsed(), position: state.position };
   updateAutoPaceHelp();
 }
@@ -419,7 +497,10 @@ function connectEvents() {
 
 async function initialize() {
   try { await loadTranslations(); } catch (_error) { messages = { ...fallbackMessages }; }
+  applyPreferences();
   await loadLibrary();
+  const serverState = await api("/rehearsal/api/state");
+  if (!recoverSession(serverState)) await send("settings", { settings: { fontSize } }, false);
   connectEvents();
 }
 

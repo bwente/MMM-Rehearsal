@@ -12,6 +12,12 @@ All notable changes to MMM-Rehearsal will be documented in this file. This proje
 - QR controller access with configurable and LAN-aware URL detection
 - Bulgarian, Danish, German, English, Spanish, French, Hungarian, Dutch, Russian, and Thai translations
 - Semantic MagicMirror notifications for external controls and state updates
+- Controller session recovery after a reload or reopened page
+- Remembered microphone, pacing, auto-end, speaking-pace, and text-size preferences
+
+### Changed
+
+- Simplified the README introduction and clarified browser speech-recognition privacy
 
 ## [0.1.0] - 2026-08-26
 

@@ -1,6 +1,8 @@
 # MMM-Rehearsal
 
-MMM-Rehearsal turns a MagicMirror² display into a rehearsal screen. Editing, microphone input, controls, and the post-rehearsal review using your phone or laptop on your local network; the mirror only shows the script.
+A focused rehearsal screen for MagicMirror².
+
+Write or choose a script on your phone or laptop, then rehearse on the mirror. The mirror shows only what you need while you speak. No account is required, and your scripts stay on your MagicMirror.
 
 ![MMM-Rehearsal running on a MagicMirror while the script is managed from a phone](docs/images/mmm-rehearsal-hero.png)
 
@@ -67,7 +69,7 @@ Browsers generally allow microphone access only from a secure context. The confi
 
 If HTTPS is already terminated by a reverse proxy such as Caddy or nginx, leave MagicMirror's `useHttps` set to `false` and let the proxy provide HTTPS instead. Do not enable TLS in both places unless the proxy is explicitly configured to connect to an HTTPS upstream.
 
-Speech tracking uses the browser's built-in speech recognition when available. Browser implementations differ: some perform recognition on-device while others may use a browser-vendor service. No audio is sent by this module or stored by the server. For fully offline recognition, use a browser/OS combination that explicitly offers on-device recognition; a Pi-hosted recognition adapter is intentionally kept separate from the mirror display and can be added later.
+Speech tracking uses your browser's speech recognition. Depending on the browser, recognition may happen on the device or through the browser vendor's service. MMM-Rehearsal does not send or store your audio.
 
 ## Controller
 
@@ -80,6 +82,8 @@ The controller supports:
 - Automatic teleprompter mode when microphone tracking is off; target-time pacing or adjustable 60–220 WPM
 - Optional auto end, enabled by default, two seconds after reaching the final script line
 - Mirror text-size adjustment
+- Automatic session recovery after the controller page is reloaded or reopened
+- Remembered microphone, pacing, auto-end, speaking-pace, and text-size preferences
 - Duration, target, pace, longest-pause, and coverage summary
 - Localized mirror and controller interfaces in Bulgarian, Danish, German, English, Spanish, French, Hungarian, Dutch, Russian, and Thai
 - The same scoring summary on both the controller and mirror completion screens
