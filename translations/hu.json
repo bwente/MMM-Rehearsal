@@ -61,5 +61,12 @@
   "MODE_AUTO_HELP": "Egyenletes tempóban lépteti a szakaszokat",
   "MODE_CLASSIC": "Klasszikus",
   "MODE_CLASSIC_HELP": "Folyamatosan görgeti a teljes szöveget",
-  "CLASSIC_SCROLLING": "Klasszikus görgetés"
+  "CLASSIC_SCROLLING": "Klasszikus görgetés",
+  "VOICE_ANALYSIS": "Hangelemzés",
+  "VOICE_ANALYSIS_HELP": "Mikrofon használata a pontozáshoz",
+  "VOICE_ANALYSIS_UNAVAILABLE": "A hangelemzés nem érhető el ebben a böngészőben",
+  "VOICE_ANALYSIS_REQUIRED": "A Fókusz módhoz szükséges",
+  "ANALYSIS": "Elemzés",
+  "VOICE": "Hang",
+  "TIMING_ONLY": "Csak időzítés"
 }

@@ -61,5 +61,12 @@
   "MODE_AUTO_HELP": "Wechselt in gleichmäßigem Tempo durch Abschnitte",
   "MODE_CLASSIC": "Klassisch",
   "MODE_CLASSIC_HELP": "Scrollt den gesamten Text fließend",
-  "CLASSIC_SCROLLING": "Klassischer Bildlauf"
+  "CLASSIC_SCROLLING": "Klassischer Bildlauf",
+  "VOICE_ANALYSIS": "Sprachanalyse",
+  "VOICE_ANALYSIS_HELP": "Mikrofon für die Bewertung verwenden",
+  "VOICE_ANALYSIS_UNAVAILABLE": "Sprachanalyse ist in diesem Browser nicht verfügbar",
+  "VOICE_ANALYSIS_REQUIRED": "Für den Fokusmodus erforderlich",
+  "ANALYSIS": "Analyse",
+  "VOICE": "Stimme",
+  "TIMING_ONLY": "Nur Zeitmessung"
 }

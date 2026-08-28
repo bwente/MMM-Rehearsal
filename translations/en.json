@@ -61,5 +61,12 @@
   "MODE_AUTO_HELP": "Advance sections at a steady pace",
   "MODE_CLASSIC": "Classic",
   "MODE_CLASSIC_HELP": "Scroll the full script smoothly",
-  "CLASSIC_SCROLLING": "Classic scrolling"
+  "CLASSIC_SCROLLING": "Classic scrolling",
+  "VOICE_ANALYSIS": "Voice analysis",
+  "VOICE_ANALYSIS_HELP": "Use the microphone for scoring",
+  "VOICE_ANALYSIS_UNAVAILABLE": "Voice analysis is unavailable in this browser",
+  "VOICE_ANALYSIS_REQUIRED": "Required for Focus mode",
+  "ANALYSIS": "Analysis",
+  "VOICE": "Voice",
+  "TIMING_ONLY": "Timing only"
 }

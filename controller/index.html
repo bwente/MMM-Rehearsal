@@ -74,6 +74,7 @@
             <label><input id="autoPaceToggle" name="presentationMode" type="radio" value="auto"><span><strong data-i18n="MODE_AUTO">Auto</strong><small id="autoPaceHelp" data-i18n="MODE_AUTO_HELP">Advance sections at a steady pace</small></span></label>
             <label><input id="classicToggle" name="presentationMode" type="radio" value="classic"><span><strong data-i18n="MODE_CLASSIC">Classic</strong><small data-i18n="MODE_CLASSIC_HELP">Scroll the full script smoothly</small></span></label>
           </fieldset>
+          <div id="voiceAnalysisRow" class="tool-row"><div><strong data-i18n="VOICE_ANALYSIS">Voice analysis</strong><small id="voiceAnalysisHelp" data-i18n="VOICE_ANALYSIS_HELP">Use the microphone for scoring</small></div><label class="switch"><input id="voiceAnalysisToggle" type="checkbox" checked><span></span></label></div>
           <div id="paceRow" class="tool-row"><div><strong data-i18n="SPEAKING_PACE">Speaking pace</strong><small data-i18n="PACE_HELP">Used when no target time is set</small></div><div class="stepper"><button id="paceDown">−</button><output id="paceWpm">130</output><button id="paceUp">+</button></div></div>
           <div class="tool-row"><div><strong data-i18n="AUTO_END">Auto end</strong><small data-i18n="AUTO_END_HELP">Finish two seconds after the final line</small></div><label class="switch"><input id="autoEndToggle" type="checkbox" checked><span></span></label></div>
           <div class="tool-row"><div><strong data-i18n="TEXT_SIZE">Text size</strong><small data-i18n="TEXT_SIZE_HELP">Adjust the mirror display</small></div><div class="stepper"><button id="fontDown">−</button><output id="fontSize">54</output><button id="fontUp">+</button></div></div>
@@ -91,6 +92,7 @@
           <div><span data-i18n="AVERAGE_PACE">Average pace</span><strong id="metricPace">0 WPM</strong></div>
           <div><span data-i18n="LONGEST_PAUSE">Longest pause</span><strong id="metricPause">0.0 sec</strong></div>
           <div><span data-i18n="SCRIPT_COVERED">Script covered</span><strong id="metricCoverage">0%</strong></div>
+          <div><span data-i18n="ANALYSIS">Analysis</span><strong id="metricAnalysis">Voice</strong></div>
         </div>
         <div class="summary-actions"><button id="rehearseAgain" class="button button--secondary" data-i18n="REHEARSE_AGAIN">Rehearse again</button><button id="backToScripts" class="button button--primary" data-i18n="BACK_TO_SCRIPTS">Back to scripts</button></div>
       </div>

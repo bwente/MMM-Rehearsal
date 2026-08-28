@@ -223,9 +223,10 @@ Module.register("MMM-Rehearsal", {
     [
       ["DURATION", this.formatTime(summary.duration ?? this.state.elapsed)],
       ["TARGET", summary.target ? this.formatTime(summary.target) : "—"],
-      ["AVERAGE_PACE", `${Math.round(summary.pace || 0)} ${this.translate("WPM")}`],
-      ["LONGEST_PAUSE", `${Number(summary.longestPause || 0).toFixed(1)} ${this.translate("SECONDS_SHORT")}`],
-      ["SCRIPT_COVERED", `${Math.round(summary.coverage || 0)}%`]
+      ["AVERAGE_PACE", summary.voiceAnalyzed ? `${Math.round(summary.pace || 0)} ${this.translate("WPM")}` : "—"],
+      ["LONGEST_PAUSE", summary.voiceAnalyzed ? `${Number(summary.longestPause || 0).toFixed(1)} ${this.translate("SECONDS_SHORT")}` : "—"],
+      ["SCRIPT_COVERED", summary.voiceAnalyzed ? `${Math.round(summary.coverage || 0)}%` : "—"],
+      ["ANALYSIS", this.translate(summary.voiceAnalyzed ? "VOICE" : "TIMING_ONLY")]
     ].forEach(([label, value]) => {
       const metric = document.createElement("div");
       metric.innerHTML = `<span>${this.translate(label)}</span><strong>${value}</strong>`;

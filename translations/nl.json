@@ -61,5 +61,12 @@
   "MODE_AUTO_HELP": "Gaat in een gelijkmatig tempo door onderdelen",
   "MODE_CLASSIC": "Klassiek",
   "MODE_CLASSIC_HELP": "Scrolt het volledige script vloeiend",
-  "CLASSIC_SCROLLING": "Klassiek scrollen"
+  "CLASSIC_SCROLLING": "Klassiek scrollen",
+  "VOICE_ANALYSIS": "Spraakanalyse",
+  "VOICE_ANALYSIS_HELP": "Gebruik de microfoon voor de beoordeling",
+  "VOICE_ANALYSIS_UNAVAILABLE": "Spraakanalyse is niet beschikbaar in deze browser",
+  "VOICE_ANALYSIS_REQUIRED": "Vereist voor Focus-modus",
+  "ANALYSIS": "Analyse",
+  "VOICE": "Stem",
+  "TIMING_ONLY": "Alleen timing"
 }

@@ -61,5 +61,12 @@
   "MODE_AUTO_HELP": "Переключает разделы в ровном темпе",
   "MODE_CLASSIC": "Классический",
   "MODE_CLASSIC_HELP": "Плавно прокручивает весь текст",
-  "CLASSIC_SCROLLING": "Классическая прокрутка"
+  "CLASSIC_SCROLLING": "Классическая прокрутка",
+  "VOICE_ANALYSIS": "Анализ речи",
+  "VOICE_ANALYSIS_HELP": "Использовать микрофон для оценки",
+  "VOICE_ANALYSIS_UNAVAILABLE": "Анализ речи недоступен в этом браузере",
+  "VOICE_ANALYSIS_REQUIRED": "Требуется для режима Фокус",
+  "ANALYSIS": "Анализ",
+  "VOICE": "Голос",
+  "TIMING_ONLY": "Только время"
 }

@@ -61,5 +61,12 @@
   "MODE_AUTO_HELP": "Fortsæt gennem afsnit i et jævnt tempo",
   "MODE_CLASSIC": "Klassisk",
   "MODE_CLASSIC_HELP": "Rul hele manuskriptet jævnt",
-  "CLASSIC_SCROLLING": "Klassisk rulning"
+  "CLASSIC_SCROLLING": "Klassisk rulning",
+  "VOICE_ANALYSIS": "Stemmeanalyse",
+  "VOICE_ANALYSIS_HELP": "Brug mikrofonen til bedømmelse",
+  "VOICE_ANALYSIS_UNAVAILABLE": "Stemmeanalyse er ikke tilgængelig i denne browser",
+  "VOICE_ANALYSIS_REQUIRED": "Påkrævet i Fokus-tilstand",
+  "ANALYSIS": "Analyse",
+  "VOICE": "Stemme",
+  "TIMING_ONLY": "Kun tid"
 }

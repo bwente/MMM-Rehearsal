@@ -61,5 +61,12 @@
   "MODE_AUTO_HELP": "Avanza por secciones a un ritmo constante",
   "MODE_CLASSIC": "Clásico",
   "MODE_CLASSIC_HELP": "Desplaza todo el guion con suavidad",
-  "CLASSIC_SCROLLING": "Desplazamiento clásico"
+  "CLASSIC_SCROLLING": "Desplazamiento clásico",
+  "VOICE_ANALYSIS": "Análisis de voz",
+  "VOICE_ANALYSIS_HELP": "Usa el micrófono para la evaluación",
+  "VOICE_ANALYSIS_UNAVAILABLE": "El análisis de voz no está disponible en este navegador",
+  "VOICE_ANALYSIS_REQUIRED": "Necesario para el modo Enfoque",
+  "ANALYSIS": "Análisis",
+  "VOICE": "Voz",
+  "TIMING_ONLY": "Solo tiempo"
 }

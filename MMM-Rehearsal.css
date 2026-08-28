@@ -55,9 +55,10 @@
 .rehearsal__ready-hint, .rehearsal__complete small { color: #888; font-size: 22px; }
 .rehearsal__complete { font-size: 42px; }
 .rehearsal__complete-mark { color: #8bb8a0; font-size: 72px; }
-.rehearsal__results { width: min(84vw, 1100px); display: grid; grid-template-columns: repeat(5, 1fr); margin-top: 18px; border: 1px solid #30302b; border-radius: 14px; overflow: hidden; }
+.rehearsal__results { width: min(84vw, 1100px); display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 18px; border: 1px solid #30302b; border-radius: 14px; overflow: hidden; }
 .rehearsal__results > div { padding: 22px 14px; border-right: 1px solid #30302b; }
-.rehearsal__results > div:last-child { border-right: 0; }
+.rehearsal__results > div:nth-child(3n) { border-right: 0; }
+.rehearsal__results > div:nth-child(-n+3) { border-bottom: 1px solid #30302b; }
 .rehearsal__results span { display: block; margin-bottom: 8px; color: #888; font-size: 15px; text-transform: uppercase; letter-spacing: .08em; }
 .rehearsal__results strong { color: #f7f7f5; font-size: 28px; font-weight: 400; }
 

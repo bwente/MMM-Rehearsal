@@ -5,7 +5,7 @@ const fallbackMessages = {
   AUTO_PACING: "Auto pacing", RUNNING: "Running", PAUSED: "Paused", READY: "Ready",
   PAUSE: "Pause", CONTINUE: "Continue", START: "Start", NICE_WORK: "Nice work.",
   WPM: "WPM", SECONDS_SHORT: "sec", MIRROR_CONNECTED: "Mirror connected", RECONNECTING: "Reconnecting",
-  CLASSIC_SCROLLING: "Classic scrolling"
+  CLASSIC_SCROLLING: "Classic scrolling", VOICE: "Voice", TIMING_ONLY: "Timing only"
 };
 let messages = { ...fallbackMessages };
 let scripts = [];
@@ -21,13 +21,15 @@ let queuedPosition = null;
 let lastSyncedSecond = -1;
 let longestPause = 0;
 let lastSpeechAt = 0;
+let analysisPosition = -1;
+let voiceAnalysisUsed = false;
 let fontSize = 54;
 let paceWpm = 130;
 let autoPaceAnchor = { elapsed: 0, position: 0 };
 let autoEndTimer = null;
 let endingSession = false;
 const preferenceKey = "mmm-rehearsal-preferences";
-const defaultPreferences = { mode: "focus", autoEnd: true, fontSize: 54, paceWpm: 130 };
+const defaultPreferences = { mode: "focus", voiceAnalysis: true, autoEnd: true, fontSize: 54, paceWpm: 130 };
 
 function t(key) {
   return messages[key] || key;
@@ -48,6 +50,7 @@ function applyPreferences(preferences = readPreferences()) {
   paceWpm = Math.max(60, Math.min(220, Number(preferences.paceWpm) || defaultPreferences.paceWpm));
   const mode = ["focus", "auto", "classic"].includes(preferences.mode) ? preferences.mode : "focus";
   document.querySelector(`[name="presentationMode"][value="${mode}"]`).checked = true;
+  $("#voiceAnalysisToggle").checked = preferences.voiceAnalysis !== false;
   $("#autoEndToggle").checked = preferences.autoEnd !== false;
   $("#fontSize").value = fontSize;
   $("#paceWpm").value = paceWpm;
@@ -57,6 +60,7 @@ function savePreferences() {
   try {
     localStorage.setItem(preferenceKey, JSON.stringify({
       mode: presentationMode(),
+      voiceAnalysis: $("#voiceAnalysisToggle").checked,
       autoEnd: $("#autoEndToggle").checked,
       fontSize,
       paceWpm
@@ -70,6 +74,28 @@ function presentationMode() {
 
 function usesAutomaticPacing() {
   return ["auto", "classic"].includes(presentationMode());
+}
+
+function supportsVoiceAnalysis() {
+  return Boolean(window.SpeechRecognition || window.webkitSpeechRecognition);
+}
+
+function shouldUseVoiceAnalysis() {
+  return presentationMode() === "focus" || $("#voiceAnalysisToggle").checked;
+}
+
+function updateVoiceAnalysisUI() {
+  const supported = supportsVoiceAnalysis();
+  const focus = presentationMode() === "focus";
+  if (!supported && focus) {
+    $("#autoPaceToggle").checked = true;
+  }
+  $("#micToggle").disabled = !supported;
+  $("#voiceAnalysisToggle").checked = supported && (focus || $("#voiceAnalysisToggle").checked);
+  $("#voiceAnalysisToggle").disabled = !supported || focus;
+  $("#voiceAnalysisRow").classList.toggle("is-disabled", !supported);
+  $("#voiceAnalysisHelp").textContent = !supported ? t("VOICE_ANALYSIS_UNAVAILABLE") : focus ? t("VOICE_ANALYSIS_REQUIRED") : t("VOICE_ANALYSIS_HELP");
+  $(".transcript-box").hidden = !shouldUseVoiceAnalysis() || !supported;
 }
 
 async function loadTranslations() {
@@ -244,10 +270,10 @@ async function prepareSession() {
   activeScript = scripts.find((item) => item.id === script.id) || script;
   parsed = parseScript(activeScript.text);
   if (!parsed.words.length) { toast("Add spoken text before starting"); return; }
-  transcriptBuffer = []; longestPause = 0; lastSpeechAt = 0; lastSyncedSecond = -1; endingSession = false; cancelAutoEnd();
+  transcriptBuffer = []; longestPause = 0; lastSpeechAt = 0; analysisPosition = -1; voiceAnalysisUsed = false; lastSyncedSecond = -1; endingSession = false; cancelAutoEnd();
   state = { status: "ready", position: 0, elapsed: 0 };
   await send("load", { script: activeScript });
-  await send("settings", { settings: { fontSize, mode: presentationMode(), paceWpm } }, false);
+  await send("settings", { settings: { fontSize, mode: presentationMode(), paceWpm, voiceAnalysis: $("#voiceAnalysisToggle").checked } }, false);
   $("#sessionTitle").textContent = activeScript.title;
   $("#positionSlider").max = Math.max(0, parsed.words.length - 1);
   $("#positionSlider").value = 0;
@@ -260,9 +286,10 @@ function showSummary(summary = {}) {
   $("#summaryTitle").textContent = t("NICE_WORK");
   $("#metricDuration").textContent = formatTime(summary.duration);
   $("#metricTarget").textContent = summary.target ? formatTime(summary.target) : "—";
-  $("#metricPace").textContent = `${Number(summary.pace) || 0} ${t("WPM")}`;
-  $("#metricPause").textContent = `${(Number(summary.longestPause) || 0).toFixed(1)} ${t("SECONDS_SHORT")}`;
-  $("#metricCoverage").textContent = `${Number(summary.coverage) || 0}%`;
+  $("#metricPace").textContent = summary.voiceAnalyzed ? `${Number(summary.pace) || 0} ${t("WPM")}` : "—";
+  $("#metricPause").textContent = summary.voiceAnalyzed ? `${(Number(summary.longestPause) || 0).toFixed(1)} ${t("SECONDS_SHORT")}` : "—";
+  $("#metricCoverage").textContent = summary.voiceAnalyzed ? `${Number(summary.coverage) || 0}%` : "—";
+  $("#metricAnalysis").textContent = summary.voiceAnalyzed ? t("VOICE") : t("TIMING_ONLY");
   showView($("#summaryView"));
 }
 
@@ -279,10 +306,14 @@ function recoverSession(serverState) {
   }
   startedAt = Date.now() - (Number(state.elapsed) || 0) * 1000;
   longestPause = Number(state.metrics?.longestPause) || Number(state.summary?.longestPause) || 0;
+  analysisPosition = Number.isFinite(Number(state.metrics?.analysisPosition)) ? Number(state.metrics.analysisPosition) : -1;
+  voiceAnalysisUsed = Boolean(state.metrics?.voiceAnalysisUsed || state.summary?.voiceAnalyzed);
   fontSize = Math.max(28, Math.min(72, Number(state.displaySettings?.fontSize) || fontSize));
   paceWpm = Math.max(60, Math.min(220, Number(state.displaySettings?.paceWpm) || paceWpm));
   const recoveredMode = ["focus", "auto", "classic"].includes(state.displaySettings?.mode) ? state.displaySettings.mode : presentationMode();
   document.querySelector(`[name="presentationMode"][value="${recoveredMode}"]`).checked = true;
+  if (typeof state.displaySettings?.voiceAnalysis === "boolean") $("#voiceAnalysisToggle").checked = state.displaySettings.voiceAnalysis;
+  updateVoiceAnalysisUI();
   $("#fontSize").value = fontSize;
   $("#paceWpm").value = paceWpm;
   savePreferences();
@@ -310,13 +341,13 @@ async function toggleSession() {
   } else if (state.status === "running") {
     cancelAutoEnd(); state.elapsed = elapsed(); await send("pause", { elapsed: state.elapsed }); stopRecognition();
   } else if (state.status === "paused") {
-    startedAt = Date.now() - state.elapsed * 1000; await send("resume"); if ($("#micToggle").checked) startRecognition();
+    startedAt = Date.now() - state.elapsed * 1000; await send("resume"); if (shouldUseVoiceAnalysis()) startRecognition();
   }
   updateSession();
 }
 
 function elapsed() { return state.status === "running" ? Math.floor((Date.now() - startedAt) / 1000) : Number(state.elapsed) || 0; }
-function startTimer() { clearInterval(timer); timer = setInterval(() => { if (state.status === "running") { state.elapsed = elapsed(); advanceAutoPace(); updateSession(); if (state.elapsed % 2 === 0 && state.elapsed !== lastSyncedSecond) { lastSyncedSecond = state.elapsed; sendPosition(); } } }, 250); if ($("#micToggle").checked) startRecognition(); }
+function startTimer() { clearInterval(timer); timer = setInterval(() => { if (state.status === "running") { state.elapsed = elapsed(); advanceAutoPace(); updateSession(); if (state.elapsed % 2 === 0 && state.elapsed !== lastSyncedSecond) { lastSyncedSecond = state.elapsed; sendPosition(); } } }, 250); if (shouldUseVoiceAnalysis()) startRecognition(); }
 function stopTimer() { clearInterval(timer); timer = null; }
 
 function updateSession() {
@@ -334,7 +365,7 @@ function updateSession() {
 }
 
 function sendPosition() {
-  queuedPosition = { position: state.position, elapsed: elapsed(), metrics: { longestPause } };
+  queuedPosition = { position: state.position, elapsed: elapsed(), metrics: { longestPause, analysisPosition, voiceAnalysisUsed } };
   if (positionSyncPromise) return positionSyncPromise;
   positionSyncPromise = (async () => {
     while (queuedPosition) {
@@ -398,7 +429,7 @@ function updateAutoPaceHelp() {
 }
 
 async function restartSession() {
-  cancelAutoEnd(); endingSession = false; stopRecognition(); state.position = 0; state.elapsed = 0; state.status = "running"; startedAt = Date.now(); transcriptBuffer = []; longestPause = 0; lastSyncedSecond = -1; autoPaceAnchor = { elapsed: 0, position: 0 }; await send("restart"); startTimer(); updateSession();
+  cancelAutoEnd(); endingSession = false; stopRecognition(); state.position = 0; state.elapsed = 0; state.status = "running"; startedAt = Date.now(); transcriptBuffer = []; longestPause = 0; analysisPosition = -1; voiceAnalysisUsed = false; lastSyncedSecond = -1; autoPaceAnchor = { elapsed: 0, position: 0 }; await send("restart"); startTimer(); updateSession();
 }
 
 async function endSession() {
@@ -406,9 +437,10 @@ async function endSession() {
   endingSession = true;
   cancelAutoEnd();
   stopTimer(); stopRecognition(); state.elapsed = elapsed(); state.status = "complete";
-  const coverage = parsed.words.length ? Math.min(100, Math.round(((state.position + 1) / parsed.words.length) * 100)) : 0;
-  const pace = state.elapsed ? Math.round(((state.position + 1) / state.elapsed) * 60) : 0;
-  const summary = { duration: state.elapsed, target: activeScript?.target || 0, pace, longestPause, coverage };
+  const spokenWords = voiceAnalysisUsed ? Math.max(0, analysisPosition + 1) : 0;
+  const coverage = voiceAnalysisUsed && parsed.words.length ? Math.min(100, Math.round((spokenWords / parsed.words.length) * 100)) : 0;
+  const pace = voiceAnalysisUsed && state.elapsed ? Math.round((spokenWords / state.elapsed) * 60) : 0;
+  const summary = { duration: state.elapsed, target: activeScript?.target || 0, pace, longestPause, coverage, voiceAnalyzed: voiceAnalysisUsed };
   await send("stop", { elapsed: state.elapsed, summary });
   showSummary(summary);
 }
@@ -423,11 +455,14 @@ async function enableMicrophone(enabled) {
     if (!SpeechRecognition) throw new Error("Speech recognition is not supported in this browser");
     recognition = new SpeechRecognition(); recognition.continuous = true; recognition.interimResults = true; recognition.lang = navigator.language || document.documentElement.lang || "en-US";
     recognition.onresult = handleRecognition;
-    recognition.onerror = (event) => { if (!["aborted", "no-speech"].includes(event.error)) toast(`Microphone: ${event.error}`); };
+    recognition.onerror = (event) => {
+      if (analysisPosition < 0 && !["aborted", "no-speech"].includes(event.error)) voiceAnalysisUsed = false;
+      if (!["aborted", "no-speech"].includes(event.error)) toast(`Microphone: ${event.error}`);
+    };
     recognition.onend = () => {
-      if (!$("#micToggle").checked || state.status !== "running") return;
+      if (!shouldUseVoiceAnalysis() || state.status !== "running") return;
       window.setTimeout(() => {
-        if ($("#micToggle").checked && state.status === "running") startRecognition();
+        if (shouldUseVoiceAnalysis() && state.status === "running") startRecognition();
       }, 300);
     };
     $("#micHelp").textContent = t("MIC_HELP");
@@ -435,7 +470,7 @@ async function enableMicrophone(enabled) {
   } catch (error) { $("#micHelp").textContent = error.message; toast(error.message); }
 }
 
-function startRecognition() { if (!recognition) return enableMicrophone(true); try { recognition.start(); } catch (_error) {} }
+function startRecognition() { if (!recognition) return enableMicrophone(true); try { recognition.start(); voiceAnalysisUsed = true; } catch (_error) {} }
 function stopRecognition() { if (recognition) { try { recognition.abort(); } catch (_error) {} } }
 
 function handleRecognition(event) {
@@ -451,13 +486,18 @@ function handleRecognition(event) {
     : transcriptBuffer.slice(-14);
   const heard = transcriptBuffer.slice(-14).concat(interimWords).slice(-18).join(" ");
   $("#transcript").textContent = heard || "Waiting for speech…";
-  const match = locate(matchingWords.join(" "), state.position);
+  voiceAnalysisUsed = true;
+  const trackingPosition = presentationMode() === "focus" ? state.position : Math.max(0, analysisPosition);
+  const match = locate(matchingWords.join(" "), trackingPosition);
   $("#confidence").style.width = `${Math.round(match.confidence * 100)}%`;
   const now = performance.now();
   if (heard && lastSpeechAt) longestPause = Math.max(longestPause, (now - lastSpeechAt) / 1000);
   if (heard) lastSpeechAt = now;
-  const threshold = match.position < state.position ? .62 : .30;
-  if (match.confidence >= threshold && match.position !== state.position) movePosition(match.position);
+  const threshold = match.position < trackingPosition ? .62 : .30;
+  if (match.confidence >= threshold) {
+    analysisPosition = Math.max(analysisPosition, match.position);
+    if (presentationMode() === "focus" && match.position !== state.position) movePosition(match.position);
+  }
 }
 
 $("#scriptForm").addEventListener("submit", async (event) => { event.preventDefault(); try { await saveCurrent(); } catch (error) { toast(error.message); } });
@@ -470,15 +510,23 @@ $("#restart").onclick = restartSession;
 $("#positionSlider").oninput = (event) => movePosition(Number(event.target.value));
 function changePresentationMode() {
   const mode = presentationMode();
-  if (mode === "focus") enableMicrophone(true);
+  updateVoiceAnalysisUI();
+  if (shouldUseVoiceAnalysis()) enableMicrophone(true);
   else stopRecognition();
   autoPaceAnchor = { elapsed: elapsed(), position: state.position };
   savePreferences();
-  send("settings", { settings: { mode, paceWpm } }, false);
+  send("settings", { settings: { mode: presentationMode(), paceWpm, voiceAnalysis: $("#voiceAnalysisToggle").checked } }, false);
   updateAutoPaceHelp();
   updateSession();
 }
 document.querySelectorAll('[name="presentationMode"]').forEach((input) => { input.onchange = changePresentationMode; });
+$("#voiceAnalysisToggle").onchange = () => {
+  savePreferences();
+  send("settings", { settings: { voiceAnalysis: $("#voiceAnalysisToggle").checked } }, false);
+  if ($("#voiceAnalysisToggle").checked) enableMicrophone(true);
+  else stopRecognition();
+  updateVoiceAnalysisUI();
+};
 $("#autoEndToggle").onchange = (event) => {
   savePreferences();
   if (event.target.checked) scheduleAutoEnd();
@@ -489,7 +537,7 @@ $("#paceUp").onclick = () => changePace(5);
 $("#fontDown").onclick = () => changeFont(-4);
 $("#fontUp").onclick = () => changeFont(4);
 $("#endSession").onclick = endSession;
-$("#rehearseAgain").onclick = () => { cancelAutoEnd(); endingSession = false; state.status = "ready"; state.position = 0; state.elapsed = 0; send("load", { script: activeScript }); updateSession(); showView($("#sessionView")); };
+$("#rehearseAgain").onclick = () => { cancelAutoEnd(); endingSession = false; stopRecognition(); transcriptBuffer = []; longestPause = 0; lastSpeechAt = 0; analysisPosition = -1; voiceAnalysisUsed = false; state.status = "ready"; state.position = 0; state.elapsed = 0; send("load", { script: activeScript }); updateSession(); showView($("#sessionView")); };
 $("#backToScripts").onclick = () => { showView($("#editorView")); loadLibrary(); };
 
 function changeFont(delta) { fontSize = Math.max(28, Math.min(72, fontSize + delta)); $("#fontSize").value = fontSize; savePreferences(); send("settings", { settings: { fontSize } }, false); }
@@ -513,9 +561,11 @@ function connectEvents() {
 async function initialize() {
   try { await loadTranslations(); } catch (_error) { messages = { ...fallbackMessages }; }
   applyPreferences();
+  updateVoiceAnalysisUI();
   await loadLibrary();
   const serverState = await api("/rehearsal/api/state");
-  if (!recoverSession(serverState)) await send("settings", { settings: { fontSize, mode: presentationMode(), paceWpm } }, false);
+  recoverSession(serverState);
+  await send("settings", { settings: { fontSize, mode: presentationMode(), paceWpm, voiceAnalysis: $("#voiceAnalysisToggle").checked } }, false);
   connectEvents();
 }
 

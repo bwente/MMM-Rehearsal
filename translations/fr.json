@@ -61,5 +61,12 @@
   "MODE_AUTO_HELP": "Avance les sections à un rythme régulier",
   "MODE_CLASSIC": "Classique",
   "MODE_CLASSIC_HELP": "Fait défiler tout le script en douceur",
-  "CLASSIC_SCROLLING": "Défilement classique"
+  "CLASSIC_SCROLLING": "Défilement classique",
+  "VOICE_ANALYSIS": "Analyse vocale",
+  "VOICE_ANALYSIS_HELP": "Utiliser le microphone pour l’évaluation",
+  "VOICE_ANALYSIS_UNAVAILABLE": "L’analyse vocale n’est pas disponible dans ce navigateur",
+  "VOICE_ANALYSIS_REQUIRED": "Requise pour le mode Focus",
+  "ANALYSIS": "Analyse",
+  "VOICE": "Voix",
+  "TIMING_ONLY": "Chronométrage seul"
 }

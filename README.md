@@ -81,6 +81,7 @@ The controller supports:
 - Focus mode with microphone tracking, tolerant local script matching, and full-script recovery
 - Auto mode with paced section changes using the target time or an adjustable 60–220 WPM
 - Classic mode with smooth, continuous full-script scrolling
+- Optional voice analysis in Auto and Classic modes without changing prompt movement
 - Optional auto end, enabled by default, two seconds after reaching the final script line
 - Mirror text-size adjustment
 - Automatic session recovery after the controller page is reloaded or reopened
@@ -91,7 +92,7 @@ The controller supports:
 
 Scripts are stored locally in `data/scripts.json`, which is excluded from version control. Bracketed lines such as `[PAUSE]`, `[SLOW]`, and `[SLIDE: 2]` are displayed as cues and excluded from spoken-word matching.
 
-The mirror uses MagicMirror's configured `language`. The controller follows the phone or laptop browser language and falls back to English.
+The mirror uses MagicMirror's configured `language`. The controller follows the phone or laptop browser language and falls back to English. When browser speech recognition is unavailable, Focus is disabled and Auto or Classic provides a timing-only summary.
 
 ## Configuration
 

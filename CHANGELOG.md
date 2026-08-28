@@ -15,11 +15,13 @@ All notable changes to MMM-Rehearsal will be documented in this file. This proje
 - Controller session recovery after a reload or reopened page
 - Remembered presentation mode, auto-end, speaking-pace, and text-size preferences
 - Focus, Auto, and smooth-scrolling Classic presentation modes
+- Optional voice analysis and speech-based scoring in Auto and Classic modes
 
 ### Changed
 
 - Simplified the README introduction and clarified browser speech-recognition privacy
 - Softened focused-section transitions for less distracting movement
+- Timing-only summaries now leave speech-derived metrics ungraded
 
 ## [0.1.0] - 2026-08-26
 
