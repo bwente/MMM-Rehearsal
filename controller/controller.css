@@ -46,6 +46,13 @@ textarea { resize: vertical; min-height: 345px; font: 19px/1.65 Georgia, serif; 
 .session-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
 .session-head h1 { font-size: 43px; margin-bottom: 0; }
 .remote-card, .tools-card { padding: 28px; }
+.mode-picker { border: 0; border-bottom: 1px solid var(--line); margin: 0; padding: 0 0 20px; display: grid; gap: 8px; }
+.mode-picker legend { color: #c6c2b8; font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
+.mode-picker label { display: grid; grid-template-columns: 18px 1fr; align-items: start; gap: 11px; padding: 11px; border: 1px solid #35342f; border-radius: 10px; cursor: pointer; }
+.mode-picker label:has(input:checked) { border-color: #8d7141; background: #211b10; }
+.mode-picker input { width: 16px; margin: 3px 0 0; accent-color: var(--gold); }
+.mode-picker strong, .mode-picker small { display: block; }
+.mode-picker small { color: var(--muted); margin-top: 4px; line-height: 1.35; }
 .status-row { display: flex; justify-content: space-between; align-items: center; }
 .session-status { color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .1em; display: flex; align-items: center; gap: 8px; }
 .session-status span { width: 8px; height: 8px; border-radius: 50%; background: #777; }

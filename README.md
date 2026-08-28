@@ -78,12 +78,13 @@ The controller supports:
 - Plain-text script editing and a local script library
 - Optional target duration and notes
 - Start, pause, continue, restart, stop, ±10-word jumps, and direct position selection
-- Microphone tracking with tolerant local script matching and full-script recovery
-- Automatic teleprompter mode when microphone tracking is off; target-time pacing or adjustable 60–220 WPM
+- Focus mode with microphone tracking, tolerant local script matching, and full-script recovery
+- Auto mode with paced section changes using the target time or an adjustable 60–220 WPM
+- Classic mode with smooth, continuous full-script scrolling
 - Optional auto end, enabled by default, two seconds after reaching the final script line
 - Mirror text-size adjustment
 - Automatic session recovery after the controller page is reloaded or reopened
-- Remembered microphone, pacing, auto-end, speaking-pace, and text-size preferences
+- Remembered presentation mode, auto-end, speaking-pace, and text-size preferences
 - Duration, target, pace, longest-pause, and coverage summary
 - Localized mirror and controller interfaces in Bulgarian, Danish, German, English, Spanish, French, Hungarian, Dutch, Russian, and Thai
 - The same scoring summary on both the controller and mirror completion screens

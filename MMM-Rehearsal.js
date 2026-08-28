@@ -24,6 +24,11 @@ Module.register("MMM-Rehearsal", {
         this.updateLiveDom();
       }
     }, 1000);
+    const animate = () => {
+      this.updateClassicScroll();
+      this.animationFrame = requestAnimationFrame(animate);
+    };
+    this.animationFrame = requestAnimationFrame(animate);
     this.sendSocketNotification("REHEARSAL_READY", { controllerUrl: this.config.controllerUrl });
   },
 
@@ -45,18 +50,21 @@ Module.register("MMM-Rehearsal", {
     const previous = this.state;
     const scriptChanged = payload.script?.text !== previous.script?.text;
     const statusChanged = payload.status !== previous.status;
+    const modeChanged = payload.displaySettings?.mode !== previous.displaySettings?.mode;
+    const fontChanged = payload.displaySettings?.fontSize !== previous.displaySettings?.fontSize;
     if (scriptChanged) this.parsed = this.parseScript(payload.script?.text || "");
     this.state = payload;
     this.sendNotification("REHEARSAL_STATE", payload);
 
-    if (scriptChanged || statusChanged || !this.getRenderedRoot()) {
+    if (scriptChanged || statusChanged || modeChanged || !this.getRenderedRoot()) {
       this.updateDom(0);
       return;
     }
 
     const root = this.getRenderedRoot();
     root.style.setProperty("--rehearsal-font-size", `${this.getFontSize()}px`);
-    if (this.getActiveBlockIndex(payload.position) !== this.getActiveBlockIndex(previous.position)) {
+    if (fontChanged && this.getPresentationMode() === "classic") requestAnimationFrame(() => this.measureClassicScroll());
+    if (this.getPresentationMode() !== "classic" && this.getActiveBlockIndex(payload.position) !== this.getActiveBlockIndex(previous.position)) {
       this.renderStage(root.querySelector(".rehearsal__stage"));
     }
     this.updateLiveDom(root);
@@ -83,6 +91,10 @@ Module.register("MMM-Rehearsal", {
 
   getActiveBlockIndex(position) {
     return this.parsed.blocks.findIndex((block) => block.type === "speech" && position >= block.start && position <= block.end);
+  },
+
+  getPresentationMode() {
+    return ["focus", "auto", "classic"].includes(this.state.displaySettings?.mode) ? this.state.displaySettings.mode : "focus";
   },
 
   parseScript(text) {
@@ -120,7 +132,7 @@ Module.register("MMM-Rehearsal", {
     if (this.state.status === "complete") return this.getCompleteDom(root);
 
     const stage = document.createElement("div");
-    stage.className = "rehearsal__stage";
+    stage.className = `rehearsal__stage rehearsal__stage--${this.getPresentationMode()}`;
     this.renderStage(stage);
     root.appendChild(stage);
     root.appendChild(this.getProgressDom());
@@ -135,6 +147,23 @@ Module.register("MMM-Rehearsal", {
 
   renderStage(stage) {
     if (!stage) return;
+    if (this.getPresentationMode() === "classic") {
+      const content = document.createElement("div");
+      content.className = "rehearsal__scroll-content";
+      this.parsed.blocks.forEach((block) => {
+        if (block.type === "cue" && !this.config.showCues) return;
+        const line = document.createElement("div");
+        line.className = block.type === "cue" ? "rehearsal__cue" : "rehearsal__line";
+        line.textContent = block.type === "cue" ? block.text.toUpperCase() : block.text;
+        content.appendChild(line);
+      });
+      stage.replaceChildren(content);
+      requestAnimationFrame(() => {
+        this.measureClassicScroll();
+        this.updateClassicScroll();
+      });
+      return;
+    }
     const activeIndex = this.getActiveBlockIndex(this.state.position);
     const visibleCount = Math.max(1, Math.min(5, Number(this.config.focusLines) || 3));
     const speechIndices = this.parsed.blocks.reduce((indices, block, index) => {
@@ -244,6 +273,32 @@ Module.register("MMM-Rehearsal", {
     } else {
       delete timing.dataset.pace;
     }
+  },
+
+  updateClassicScroll() {
+    if (this.getPresentationMode() !== "classic" || !["running", "paused"].includes(this.state.status)) return;
+    const root = this.getRenderedRoot();
+    const stage = root?.querySelector(".rehearsal__stage--classic");
+    const content = stage?.querySelector(".rehearsal__scroll-content");
+    if (!stage || !content) return;
+    if (!content.dataset.scrollDistance) this.measureClassicScroll();
+    const target = Number(this.state.target) || 0;
+    const pace = Math.max(60, Math.min(220, Number(this.state.displaySettings?.paceWpm) || 130));
+    const wordsPerSecond = target ? this.parsed.wordCount / target : pace / 60;
+    const sinceUpdate = this.state.status === "running" && this.state.updatedAt
+      ? Math.max(0, (Date.now() - this.state.updatedAt) / 1000)
+      : 0;
+    const livePosition = (Number(this.state.position) || 0) + sinceUpdate * wordsPerSecond;
+    const progress = this.parsed.wordCount ? Math.min(1, livePosition / Math.max(1, this.parsed.wordCount - 1)) : 0;
+    const distance = Number(content.dataset.scrollDistance) || 0;
+    content.style.transform = `translate3d(0, ${-distance * progress}px, 0)`;
+  },
+
+  measureClassicScroll() {
+    const content = this.getRenderedRoot()?.querySelector(".rehearsal__scroll-content");
+    if (!content) return;
+    const lineHeight = this.getFontSize() * Number(this.config.lineSpacing || 1.35);
+    content.dataset.scrollDistance = String(Math.max(0, content.scrollHeight - lineHeight));
   },
 
   formatTime(seconds) {

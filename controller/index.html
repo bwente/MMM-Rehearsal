@@ -68,8 +68,12 @@
         </section>
 
         <aside class="card tools-card">
-          <div class="tool-row"><div><strong data-i18n="MIC_TRACKING">Microphone tracking</strong><small id="micHelp" data-i18n="MIC_HELP">Follow your voice through the script</small></div><label class="switch"><input id="micToggle" type="checkbox" checked><span></span></label></div>
-          <div class="tool-row"><div><strong data-i18n="AUTO_TELEPROMPTER">Automatic teleprompter</strong><small id="autoPaceHelp" data-i18n="AUTO_HELP">Advance at a steady speaking pace</small></div><label class="switch"><input id="autoPaceToggle" type="checkbox"><span></span></label></div>
+          <fieldset class="mode-picker">
+            <legend data-i18n="PRESENTATION_MODE">Presentation mode</legend>
+            <label><input id="micToggle" name="presentationMode" type="radio" value="focus" checked><span><strong data-i18n="MODE_FOCUS">Focus</strong><small id="micHelp" data-i18n="MODE_FOCUS_HELP">Follow your voice one section at a time</small></span></label>
+            <label><input id="autoPaceToggle" name="presentationMode" type="radio" value="auto"><span><strong data-i18n="MODE_AUTO">Auto</strong><small id="autoPaceHelp" data-i18n="MODE_AUTO_HELP">Advance sections at a steady pace</small></span></label>
+            <label><input id="classicToggle" name="presentationMode" type="radio" value="classic"><span><strong data-i18n="MODE_CLASSIC">Classic</strong><small data-i18n="MODE_CLASSIC_HELP">Scroll the full script smoothly</small></span></label>
+          </fieldset>
           <div id="paceRow" class="tool-row"><div><strong data-i18n="SPEAKING_PACE">Speaking pace</strong><small data-i18n="PACE_HELP">Used when no target time is set</small></div><div class="stepper"><button id="paceDown">−</button><output id="paceWpm">130</output><button id="paceUp">+</button></div></div>
           <div class="tool-row"><div><strong data-i18n="AUTO_END">Auto end</strong><small data-i18n="AUTO_END_HELP">Finish two seconds after the final line</small></div><label class="switch"><input id="autoEndToggle" type="checkbox" checked><span></span></label></div>
           <div class="tool-row"><div><strong data-i18n="TEXT_SIZE">Text size</strong><small data-i18n="TEXT_SIZE_HELP">Adjust the mirror display</small></div><div class="stepper"><button id="fontDown">−</button><output id="fontSize">54</output><button id="fontUp">+</button></div></div>

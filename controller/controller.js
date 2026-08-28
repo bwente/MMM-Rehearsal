@@ -4,7 +4,8 @@ const fallbackMessages = {
   READY_TO_REHEARSE: "Ready to rehearse", YOUR_SCRIPTS: "Your scripts", LISTENING: "Listening",
   AUTO_PACING: "Auto pacing", RUNNING: "Running", PAUSED: "Paused", READY: "Ready",
   PAUSE: "Pause", CONTINUE: "Continue", START: "Start", NICE_WORK: "Nice work.",
-  WPM: "WPM", SECONDS_SHORT: "sec", MIRROR_CONNECTED: "Mirror connected", RECONNECTING: "Reconnecting"
+  WPM: "WPM", SECONDS_SHORT: "sec", MIRROR_CONNECTED: "Mirror connected", RECONNECTING: "Reconnecting",
+  CLASSIC_SCROLLING: "Classic scrolling"
 };
 let messages = { ...fallbackMessages };
 let scripts = [];
@@ -26,7 +27,7 @@ let autoPaceAnchor = { elapsed: 0, position: 0 };
 let autoEndTimer = null;
 let endingSession = false;
 const preferenceKey = "mmm-rehearsal-preferences";
-const defaultPreferences = { microphone: true, autoPace: false, autoEnd: true, fontSize: 54, paceWpm: 130 };
+const defaultPreferences = { mode: "focus", autoEnd: true, fontSize: 54, paceWpm: 130 };
 
 function t(key) {
   return messages[key] || key;
@@ -34,7 +35,9 @@ function t(key) {
 
 function readPreferences() {
   try {
-    return { ...defaultPreferences, ...JSON.parse(localStorage.getItem(preferenceKey) || "{}") };
+    const stored = JSON.parse(localStorage.getItem(preferenceKey) || "{}");
+    if (!stored.mode) stored.mode = stored.microphone === false && stored.autoPace ? "auto" : "focus";
+    return { ...defaultPreferences, ...stored };
   } catch (_error) {
     return { ...defaultPreferences };
   }
@@ -43,8 +46,8 @@ function readPreferences() {
 function applyPreferences(preferences = readPreferences()) {
   fontSize = Math.max(28, Math.min(72, Number(preferences.fontSize) || defaultPreferences.fontSize));
   paceWpm = Math.max(60, Math.min(220, Number(preferences.paceWpm) || defaultPreferences.paceWpm));
-  $("#micToggle").checked = preferences.microphone !== false;
-  $("#autoPaceToggle").checked = Boolean(preferences.autoPace) && !$("#micToggle").checked;
+  const mode = ["focus", "auto", "classic"].includes(preferences.mode) ? preferences.mode : "focus";
+  document.querySelector(`[name="presentationMode"][value="${mode}"]`).checked = true;
   $("#autoEndToggle").checked = preferences.autoEnd !== false;
   $("#fontSize").value = fontSize;
   $("#paceWpm").value = paceWpm;
@@ -53,13 +56,20 @@ function applyPreferences(preferences = readPreferences()) {
 function savePreferences() {
   try {
     localStorage.setItem(preferenceKey, JSON.stringify({
-      microphone: $("#micToggle").checked,
-      autoPace: $("#autoPaceToggle").checked,
+      mode: presentationMode(),
       autoEnd: $("#autoEndToggle").checked,
       fontSize,
       paceWpm
     }));
   } catch (_error) {}
+}
+
+function presentationMode() {
+  return document.querySelector('[name="presentationMode"]:checked')?.value || "focus";
+}
+
+function usesAutomaticPacing() {
+  return ["auto", "classic"].includes(presentationMode());
 }
 
 async function loadTranslations() {
@@ -237,7 +247,7 @@ async function prepareSession() {
   transcriptBuffer = []; longestPause = 0; lastSpeechAt = 0; lastSyncedSecond = -1; endingSession = false; cancelAutoEnd();
   state = { status: "ready", position: 0, elapsed: 0 };
   await send("load", { script: activeScript });
-  await send("settings", { settings: { fontSize } }, false);
+  await send("settings", { settings: { fontSize, mode: presentationMode(), paceWpm } }, false);
   $("#sessionTitle").textContent = activeScript.title;
   $("#positionSlider").max = Math.max(0, parsed.words.length - 1);
   $("#positionSlider").value = 0;
@@ -270,7 +280,11 @@ function recoverSession(serverState) {
   startedAt = Date.now() - (Number(state.elapsed) || 0) * 1000;
   longestPause = Number(state.metrics?.longestPause) || Number(state.summary?.longestPause) || 0;
   fontSize = Math.max(28, Math.min(72, Number(state.displaySettings?.fontSize) || fontSize));
+  paceWpm = Math.max(60, Math.min(220, Number(state.displaySettings?.paceWpm) || paceWpm));
+  const recoveredMode = ["focus", "auto", "classic"].includes(state.displaySettings?.mode) ? state.displaySettings.mode : presentationMode();
+  document.querySelector(`[name="presentationMode"][value="${recoveredMode}"]`).checked = true;
   $("#fontSize").value = fontSize;
+  $("#paceWpm").value = paceWpm;
   savePreferences();
 
   $("#sessionTitle").textContent = activeScript.title;
@@ -313,7 +327,7 @@ function updateSession() {
   $("#positionSlider").value = state.position || 0;
   const block = parsed.blocks.find((item) => item.type === "speech" && state.position >= item.start && state.position <= item.end);
   $("#currentText").textContent = block?.text || t("READY_TO_REHEARSE");
-  const label = state.status === "running" ? ($("#micToggle").checked ? t("LISTENING") : $("#autoPaceToggle").checked ? t("AUTO_PACING") : t("RUNNING")) : state.status === "paused" ? t("PAUSED") : t("READY");
+  const label = state.status === "running" ? (presentationMode() === "focus" ? t("LISTENING") : presentationMode() === "classic" ? t("CLASSIC_SCROLLING") : t("AUTO_PACING")) : state.status === "paused" ? t("PAUSED") : t("READY");
   $("#sessionStatus").className = `session-status${state.status === "running" ? " is-running" : ""}`;
   $("#sessionStatus").lastChild.textContent = ` ${label}`;
   $("#mainControl").textContent = state.status === "running" ? t("PAUSE") : state.status === "paused" ? t("CONTINUE") : t("START");
@@ -347,7 +361,7 @@ function autoWordsPerSecond() {
 }
 
 function advanceAutoPace() {
-  if (!$("#autoPaceToggle").checked || $("#micToggle").checked || !parsed.words.length) return;
+  if (!usesAutomaticPacing() || !parsed.words.length) return;
   const secondsSinceAnchor = Math.max(0, elapsed() - autoPaceAnchor.elapsed);
   const nextPosition = Math.min(parsed.words.length - 1, Math.floor(autoPaceAnchor.position + secondsSinceAnchor * autoWordsPerSecond()));
   if (nextPosition !== state.position) {
@@ -379,7 +393,7 @@ function updateAutoPaceHelp() {
     $("#paceRow").classList.add("is-disabled");
   } else {
     $("#autoPaceHelp").textContent = `${t("AUTO_HELP")} · ${paceWpm} ${t("WPM")}`;
-    $("#paceRow").classList.remove("is-disabled");
+    $("#paceRow").classList.toggle("is-disabled", presentationMode() === "focus");
   }
 }
 
@@ -401,8 +415,7 @@ async function endSession() {
 
 async function enableMicrophone(enabled) {
   if (!enabled) { stopRecognition(); return; }
-  $("#autoPaceToggle").checked = false;
-  if (!window.isSecureContext && !["localhost", "127.0.0.1"].includes(location.hostname)) { $("#micToggle").checked = false; toast("Microphone access needs HTTPS"); $("#micHelp").textContent = "Open this controller over HTTPS"; return; }
+  if (!window.isSecureContext && !["localhost", "127.0.0.1"].includes(location.hostname)) { toast("Microphone access needs HTTPS"); $("#micHelp").textContent = "Open this controller over HTTPS"; return; }
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     stream.getTracks().forEach((track) => track.stop());
@@ -419,7 +432,7 @@ async function enableMicrophone(enabled) {
     };
     $("#micHelp").textContent = t("MIC_HELP");
     if (state.status === "running") startRecognition();
-  } catch (error) { $("#micToggle").checked = false; $("#micHelp").textContent = error.message; toast(error.message); }
+  } catch (error) { $("#micHelp").textContent = error.message; toast(error.message); }
 }
 
 function startRecognition() { if (!recognition) return enableMicrophone(true); try { recognition.start(); } catch (_error) {} }
@@ -455,16 +468,17 @@ $("#jumpBack").onclick = () => movePosition(state.position - 10);
 $("#jumpForward").onclick = () => movePosition(state.position + 10);
 $("#restart").onclick = restartSession;
 $("#positionSlider").oninput = (event) => movePosition(Number(event.target.value));
-$("#micToggle").onchange = (event) => { savePreferences(); enableMicrophone(event.target.checked); };
-$("#autoPaceToggle").onchange = (event) => {
-  if (event.target.checked) {
-    $("#micToggle").checked = false;
-    stopRecognition();
-    autoPaceAnchor = { elapsed: elapsed(), position: state.position };
-  }
+function changePresentationMode() {
+  const mode = presentationMode();
+  if (mode === "focus") enableMicrophone(true);
+  else stopRecognition();
+  autoPaceAnchor = { elapsed: elapsed(), position: state.position };
   savePreferences();
+  send("settings", { settings: { mode, paceWpm } }, false);
+  updateAutoPaceHelp();
   updateSession();
-};
+}
+document.querySelectorAll('[name="presentationMode"]').forEach((input) => { input.onchange = changePresentationMode; });
 $("#autoEndToggle").onchange = (event) => {
   savePreferences();
   if (event.target.checked) scheduleAutoEnd();
@@ -486,6 +500,7 @@ function changePace(delta) {
   $("#paceWpm").value = paceWpm;
   savePreferences();
   autoPaceAnchor = { elapsed: elapsed(), position: state.position };
+  send("settings", { settings: { paceWpm } }, false);
   updateAutoPaceHelp();
 }
 
@@ -500,7 +515,7 @@ async function initialize() {
   applyPreferences();
   await loadLibrary();
   const serverState = await api("/rehearsal/api/state");
-  if (!recoverSession(serverState)) await send("settings", { settings: { fontSize } }, false);
+  if (!recoverSession(serverState)) await send("settings", { settings: { fontSize, mode: presentationMode(), paceWpm } }, false);
   connectEvents();
 }
 
