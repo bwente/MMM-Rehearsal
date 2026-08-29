@@ -76,6 +76,10 @@ function usesAutomaticPacing() {
   return ["auto", "classic"].includes(presentationMode());
 }
 
+function classicAnchor() {
+  return { position: Number(state.position) || 0, elapsed: elapsed() };
+}
+
 function supportsVoiceAnalysis() {
   return Boolean(window.SpeechRecognition || window.webkitSpeechRecognition);
 }
@@ -273,7 +277,7 @@ async function prepareSession() {
   transcriptBuffer = []; longestPause = 0; lastSpeechAt = 0; analysisPosition = -1; voiceAnalysisUsed = false; lastSyncedSecond = -1; endingSession = false; cancelAutoEnd();
   state = { status: "ready", position: 0, elapsed: 0 };
   await send("load", { script: activeScript });
-  await send("settings", { settings: { fontSize, mode: presentationMode(), paceWpm, voiceAnalysis: $("#voiceAnalysisToggle").checked } }, false);
+  await send("settings", { settings: { fontSize, mode: presentationMode(), paceWpm, voiceAnalysis: $("#voiceAnalysisToggle").checked, classicAnchor: { position: 0, elapsed: 0 } } }, false);
   $("#sessionTitle").textContent = activeScript.title;
   $("#positionSlider").max = Math.max(0, parsed.words.length - 1);
   $("#positionSlider").value = 0;
@@ -384,6 +388,7 @@ async function movePosition(position, resetAutoAnchor = true) {
   state.position = Math.max(0, Math.min(parsed.words.length - 1, Math.round(position)));
   if (state.position < parsed.words.length - 1) cancelAutoEnd();
   if (resetAutoAnchor) autoPaceAnchor = { elapsed: elapsed(), position: state.position };
+  if (presentationMode() === "classic") send("settings", { settings: { classicAnchor: classicAnchor() } }, false);
   updateSession(); scheduleAutoEnd(); await sendPosition();
 }
 
@@ -429,7 +434,7 @@ function updateAutoPaceHelp() {
 }
 
 async function restartSession() {
-  cancelAutoEnd(); endingSession = false; stopRecognition(); state.position = 0; state.elapsed = 0; state.status = "running"; startedAt = Date.now(); transcriptBuffer = []; longestPause = 0; analysisPosition = -1; voiceAnalysisUsed = false; lastSyncedSecond = -1; autoPaceAnchor = { elapsed: 0, position: 0 }; await send("restart"); startTimer(); updateSession();
+  cancelAutoEnd(); endingSession = false; stopRecognition(); state.position = 0; state.elapsed = 0; state.status = "running"; startedAt = Date.now(); transcriptBuffer = []; longestPause = 0; analysisPosition = -1; voiceAnalysisUsed = false; lastSyncedSecond = -1; autoPaceAnchor = { elapsed: 0, position: 0 }; await send("restart"); if (presentationMode() === "classic") await send("settings", { settings: { classicAnchor: { position: 0, elapsed: 0 } } }, false); startTimer(); updateSession();
 }
 
 async function endSession() {
@@ -515,7 +520,7 @@ function changePresentationMode() {
   else stopRecognition();
   autoPaceAnchor = { elapsed: elapsed(), position: state.position };
   savePreferences();
-  send("settings", { settings: { mode: presentationMode(), paceWpm, voiceAnalysis: $("#voiceAnalysisToggle").checked } }, false);
+  send("settings", { settings: { mode: presentationMode(), paceWpm, voiceAnalysis: $("#voiceAnalysisToggle").checked, ...(presentationMode() === "classic" ? { classicAnchor: classicAnchor() } : {}) } }, false);
   updateAutoPaceHelp();
   updateSession();
 }
@@ -537,7 +542,7 @@ $("#paceUp").onclick = () => changePace(5);
 $("#fontDown").onclick = () => changeFont(-4);
 $("#fontUp").onclick = () => changeFont(4);
 $("#endSession").onclick = endSession;
-$("#rehearseAgain").onclick = () => { cancelAutoEnd(); endingSession = false; stopRecognition(); transcriptBuffer = []; longestPause = 0; lastSpeechAt = 0; analysisPosition = -1; voiceAnalysisUsed = false; state.status = "ready"; state.position = 0; state.elapsed = 0; send("load", { script: activeScript }); updateSession(); showView($("#sessionView")); };
+$("#rehearseAgain").onclick = () => { cancelAutoEnd(); endingSession = false; stopRecognition(); transcriptBuffer = []; longestPause = 0; lastSpeechAt = 0; analysisPosition = -1; voiceAnalysisUsed = false; state.status = "ready"; state.position = 0; state.elapsed = 0; send("load", { script: activeScript }); if (presentationMode() === "classic") send("settings", { settings: { classicAnchor: { position: 0, elapsed: 0 } } }, false); updateSession(); showView($("#sessionView")); };
 $("#backToScripts").onclick = () => { showView($("#editorView")); loadLibrary(); };
 
 function changeFont(delta) { fontSize = Math.max(28, Math.min(72, fontSize + delta)); $("#fontSize").value = fontSize; savePreferences(); send("settings", { settings: { fontSize } }, false); }
@@ -548,7 +553,7 @@ function changePace(delta) {
   $("#paceWpm").value = paceWpm;
   savePreferences();
   autoPaceAnchor = { elapsed: elapsed(), position: state.position };
-  send("settings", { settings: { paceWpm } }, false);
+  send("settings", { settings: { paceWpm, ...(presentationMode() === "classic" ? { classicAnchor: classicAnchor() } : {}) } }, false);
   updateAutoPaceHelp();
 }
 

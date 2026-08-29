@@ -22,6 +22,7 @@ All notable changes to MMM-Rehearsal will be documented in this file. This proje
 - Simplified the README introduction and clarified browser speech-recognition privacy
 - Softened focused-section transitions for less distracting movement
 - Timing-only summaries now leave speech-derived metrics ungraded
+- Classic scrolling now uses a stable timing anchor to remove word-update jitter
 
 ## [0.1.0] - 2026-08-26
 

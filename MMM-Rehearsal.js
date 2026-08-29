@@ -286,10 +286,12 @@ Module.register("MMM-Rehearsal", {
     const target = Number(this.state.target) || 0;
     const pace = Math.max(60, Math.min(220, Number(this.state.displaySettings?.paceWpm) || 130));
     const wordsPerSecond = target ? this.parsed.wordCount / target : pace / 60;
-    const sinceUpdate = this.state.status === "running" && this.state.updatedAt
-      ? Math.max(0, (Date.now() - this.state.updatedAt) / 1000)
-      : 0;
-    const livePosition = (Number(this.state.position) || 0) + sinceUpdate * wordsPerSecond;
+    const anchor = this.state.displaySettings?.classicAnchor || { position: this.state.position, elapsed: this.state.elapsed };
+    const liveElapsed = this.state.status === "running" && this.state.startedAt
+      ? Math.max(0, (Date.now() - this.state.startedAt) / 1000)
+      : Math.max(0, Number(this.state.elapsed) || 0);
+    const secondsSinceAnchor = Math.max(0, liveElapsed - (Number(anchor.elapsed) || 0));
+    const livePosition = (Number(anchor.position) || 0) + secondsSinceAnchor * wordsPerSecond;
     const progress = this.parsed.wordCount ? Math.min(1, livePosition / Math.max(1, this.parsed.wordCount - 1)) : 0;
     const distance = Number(content.dataset.scrollDistance) || 0;
     content.style.transform = `translate3d(0, ${-distance * progress}px, 0)`;
