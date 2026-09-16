@@ -68,5 +68,10 @@
   "VOICE_ANALYSIS_REQUIRED": "Vereist voor Focus-modus",
   "ANALYSIS": "Analyse",
   "VOICE": "Stem",
-  "TIMING_ONLY": "Alleen timing"
+  "TIMING_ONLY": "Alleen timing",
+  "ESTIMATED_ACCURACY": "Geschatte nauwkeurigheid",
+  "REVIEW_LINES": "Bekijk deze regels",
+  "GOOD_PROGRESS": "Goede vooruitgang.",
+  "KEEP_PRACTICING": "Blijf oefenen.",
+  "TRY_AGAIN": "Laten we het opnieuw proberen."
 }

@@ -68,5 +68,10 @@
   "VOICE_ANALYSIS_REQUIRED": "Påkrævet i Fokus-tilstand",
   "ANALYSIS": "Analyse",
   "VOICE": "Stemme",
-  "TIMING_ONLY": "Kun tid"
+  "TIMING_ONLY": "Kun tid",
+  "ESTIMATED_ACCURACY": "Anslået nøjagtighed",
+  "REVIEW_LINES": "Gennemgå disse linjer",
+  "GOOD_PROGRESS": "God fremgang.",
+  "KEEP_PRACTICING": "Bliv ved med at øve.",
+  "TRY_AGAIN": "Lad os prøve igen."
 }

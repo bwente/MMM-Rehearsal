@@ -68,5 +68,10 @@
   "VOICE_ANALYSIS_REQUIRED": "Задължително за режим Фокус",
   "ANALYSIS": "Анализ",
   "VOICE": "Глас",
-  "TIMING_ONLY": "Само време"
+  "TIMING_ONLY": "Само време",
+  "ESTIMATED_ACCURACY": "Приблизителна точност",
+  "REVIEW_LINES": "Прегледайте тези редове",
+  "GOOD_PROGRESS": "Добър напредък.",
+  "KEEP_PRACTICING": "Продължавайте да упражнявате.",
+  "TRY_AGAIN": "Нека опитаме отново."
 }

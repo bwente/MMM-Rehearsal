@@ -56,6 +56,11 @@ module.exports = NodeHelper.create({
       res.status(204).end();
     });
     app.get("/rehearsal/api/state", (_req, res) => res.json(this.state));
+    app.post("/rehearsal/api/command", this.jsonParser(), (req, res) => {
+      this.applyEvent(req.body || {});
+      res.json(this.state);
+    });
+    // Kept for controllers from earlier releases.
     app.post("/rehearsal/api/events", this.jsonParser(), (req, res) => {
       this.applyEvent(req.body || {});
       res.json(this.state);

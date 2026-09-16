@@ -5,7 +5,8 @@ const fallbackMessages = {
   AUTO_PACING: "Auto pacing", RUNNING: "Running", PAUSED: "Paused", READY: "Ready",
   PAUSE: "Pause", CONTINUE: "Continue", START: "Start", NICE_WORK: "Nice work.",
   WPM: "WPM", SECONDS_SHORT: "sec", MIRROR_CONNECTED: "Mirror connected", RECONNECTING: "Reconnecting",
-  CLASSIC_SCROLLING: "Classic scrolling", VOICE: "Voice", TIMING_ONLY: "Timing only"
+  CLASSIC_SCROLLING: "Classic scrolling", VOICE: "Voice", TIMING_ONLY: "Timing only",
+  GOOD_PROGRESS: "Good progress.", KEEP_PRACTICING: "Keep practicing.", TRY_AGAIN: "Let's try that again."
 };
 let messages = { ...fallbackMessages };
 let scripts = [];
@@ -16,6 +17,8 @@ let startedAt = 0;
 let timer = null;
 let recognition = null;
 let transcriptBuffer = [];
+let spokenWords = [];
+let interimWords = [];
 let positionSyncPromise = null;
 let queuedPosition = null;
 let lastSyncedSecond = -1;
@@ -168,6 +171,65 @@ function parseScript(text) {
   return { blocks, words };
 }
 
+function estimateAccuracy(expectedEntries, recognizedWords) {
+  const fillers = new Set(["um", "uh", "er", "ah", "hmm", "mm"]);
+  const expected = expectedEntries.slice(0, 1500);
+  const spoken = recognizedWords.filter((word) => !fillers.has(word)).slice(0, 1500);
+  if (!expected.length) return { accuracy: 0, reviewLines: [] };
+  const wordCost = (expectedWord, spokenWord) => {
+    if (expectedWord === spokenWord) return 0;
+    if (expectedWord[0] === spokenWord[0] && Math.abs(expectedWord.length - spokenWord.length) <= 2 && similarity(expectedWord, spokenWord) >= .82) return .25;
+    return 1;
+  };
+
+  const columns = spoken.length + 1;
+  const directions = new Uint8Array((expected.length + 1) * columns);
+  let previous = new Float32Array(columns);
+  for (let j = 0; j < columns; j += 1) { previous[j] = j; if (j) directions[j] = 2; }
+  for (let i = 1; i <= expected.length; i += 1) {
+    const current = new Float32Array(columns);
+    current[0] = i;
+    directions[i * columns] = 1;
+    for (let j = 1; j < columns; j += 1) {
+      const substitution = previous[j - 1] + wordCost(expected[i - 1].word, spoken[j - 1]);
+      const deletion = previous[j] + 1;
+      const insertion = current[j - 1] + 1;
+      if (substitution <= deletion && substitution <= insertion) { current[j] = substitution; directions[i * columns + j] = 0; }
+      else if (deletion <= insertion) { current[j] = deletion; directions[i * columns + j] = 1; }
+      else { current[j] = insertion; directions[i * columns + j] = 2; }
+    }
+    previous = current;
+  }
+
+  const errors = new Map();
+  let i = expected.length;
+  let j = spoken.length;
+  while (i || j) {
+    const direction = directions[i * columns + j];
+    if (i && j && direction === 0) {
+      if (wordCost(expected[i - 1].word, spoken[j - 1]) === 1) errors.set(expected[i - 1].block, (errors.get(expected[i - 1].block) || 0) + 1);
+      i -= 1; j -= 1;
+    } else if (i && (direction === 1 || !j)) {
+      errors.set(expected[i - 1].block, (errors.get(expected[i - 1].block) || 0) + 1);
+      i -= 1;
+    } else {
+      const block = i ? expected[i - 1].block : expected[0].block;
+      errors.set(block, (errors.get(block) || 0) + 1);
+      j -= 1;
+    }
+  }
+
+  const editCost = previous[spoken.length];
+  const accuracy = Math.max(0, Math.min(100, Math.round((1 - editCost / Math.max(expected.length, spoken.length, 1)) * 100)));
+  const reviewLines = [...errors.entries()]
+    .map(([block, count]) => ({ text: parsed.blocks[block]?.text, score: count / Math.max(1, parsed.blocks[block]?.words?.length || 1) }))
+    .filter((item) => item.text && item.score >= .15)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map((item) => item.text);
+  return { accuracy, reviewLines };
+}
+
 function similarity(a, b) {
   if (a === b) return 1;
   if (!a || !b) return 0;
@@ -219,7 +281,7 @@ async function api(url, options = {}) {
 }
 
 async function send(action, extra = {}, adoptResponse = true) {
-  const response = await api("/rehearsal/api/events", { method: "POST", body: JSON.stringify({ action, ...extra }) });
+  const response = await api("/rehearsal/api/command", { method: "POST", cache: "no-store", body: JSON.stringify({ action, ...extra }) });
   if (adoptResponse) state = response;
   return response;
 }
@@ -274,7 +336,7 @@ async function prepareSession() {
   activeScript = scripts.find((item) => item.id === script.id) || script;
   parsed = parseScript(activeScript.text);
   if (!parsed.words.length) { toast("Add spoken text before starting"); return; }
-  transcriptBuffer = []; longestPause = 0; lastSpeechAt = 0; analysisPosition = -1; voiceAnalysisUsed = false; lastSyncedSecond = -1; endingSession = false; cancelAutoEnd();
+  transcriptBuffer = []; spokenWords = []; interimWords = []; longestPause = 0; lastSpeechAt = 0; analysisPosition = -1; voiceAnalysisUsed = false; lastSyncedSecond = -1; endingSession = false; cancelAutoEnd();
   state = { status: "ready", position: 0, elapsed: 0 };
   await send("load", { script: activeScript });
   await send("settings", { settings: { fontSize, mode: presentationMode(), paceWpm, voiceAnalysis: $("#voiceAnalysisToggle").checked, classicAnchor: { position: 0, elapsed: 0 } } }, false);
@@ -287,13 +349,19 @@ async function prepareSession() {
 }
 
 function showSummary(summary = {}) {
-  $("#summaryTitle").textContent = t("NICE_WORK");
+  const accuracy = Number(summary.estimatedAccuracy);
+  const message = !summary.voiceAnalyzed || summary.estimatedAccuracy == null || !Number.isFinite(accuracy) ? "REHEARSAL_COMPLETE" : accuracy >= 85 ? "NICE_WORK" : accuracy >= 65 ? "GOOD_PROGRESS" : accuracy >= 35 ? "KEEP_PRACTICING" : "TRY_AGAIN";
+  $("#summaryTitle").textContent = t(message);
   $("#metricDuration").textContent = formatTime(summary.duration);
   $("#metricTarget").textContent = summary.target ? formatTime(summary.target) : "—";
   $("#metricPace").textContent = summary.voiceAnalyzed ? `${Number(summary.pace) || 0} ${t("WPM")}` : "—";
   $("#metricPause").textContent = summary.voiceAnalyzed ? `${(Number(summary.longestPause) || 0).toFixed(1)} ${t("SECONDS_SHORT")}` : "—";
   $("#metricCoverage").textContent = summary.voiceAnalyzed ? `${Number(summary.coverage) || 0}%` : "—";
   $("#metricAnalysis").textContent = summary.voiceAnalyzed ? t("VOICE") : t("TIMING_ONLY");
+  $("#metricAccuracy").textContent = summary.voiceAnalyzed && Number.isFinite(Number(summary.estimatedAccuracy)) ? `${summary.estimatedAccuracy}%` : "—";
+  const lines = Array.isArray(summary.reviewLines) ? summary.reviewLines.slice(0, 3) : [];
+  $("#reviewLines").hidden = !summary.voiceAnalyzed || !lines.length;
+  $("#reviewLinesList").replaceChildren(...lines.map((text) => { const item = document.createElement("li"); item.textContent = text; return item; }));
   showView($("#summaryView"));
 }
 
@@ -434,7 +502,7 @@ function updateAutoPaceHelp() {
 }
 
 async function restartSession() {
-  cancelAutoEnd(); endingSession = false; stopRecognition(); state.position = 0; state.elapsed = 0; state.status = "running"; startedAt = Date.now(); transcriptBuffer = []; longestPause = 0; analysisPosition = -1; voiceAnalysisUsed = false; lastSyncedSecond = -1; autoPaceAnchor = { elapsed: 0, position: 0 }; await send("restart"); if (presentationMode() === "classic") await send("settings", { settings: { classicAnchor: { position: 0, elapsed: 0 } } }, false); startTimer(); updateSession();
+  cancelAutoEnd(); endingSession = false; stopRecognition(); state.position = 0; state.elapsed = 0; state.status = "running"; startedAt = Date.now(); transcriptBuffer = []; spokenWords = []; interimWords = []; longestPause = 0; analysisPosition = -1; voiceAnalysisUsed = false; lastSyncedSecond = -1; autoPaceAnchor = { elapsed: 0, position: 0 }; await send("restart"); if (presentationMode() === "classic") await send("settings", { settings: { classicAnchor: { position: 0, elapsed: 0 } } }, false); startTimer(); updateSession();
 }
 
 async function endSession() {
@@ -442,11 +510,31 @@ async function endSession() {
   endingSession = true;
   cancelAutoEnd();
   stopTimer(); stopRecognition(); state.elapsed = elapsed(); state.status = "complete";
-  const spokenWords = voiceAnalysisUsed ? Math.max(0, analysisPosition + 1) : 0;
-  const coverage = voiceAnalysisUsed && parsed.words.length ? Math.min(100, Math.round((spokenWords / parsed.words.length) * 100)) : 0;
-  const pace = voiceAnalysisUsed && state.elapsed ? Math.round((spokenWords / state.elapsed) * 60) : 0;
-  const summary = { duration: state.elapsed, target: activeScript?.target || 0, pace, longestPause, coverage, voiceAnalyzed: voiceAnalysisUsed };
-  await send("stop", { elapsed: state.elapsed, summary });
+  const spokenCount = voiceAnalysisUsed ? Math.max(0, analysisPosition + 1) : 0;
+  const coverage = voiceAnalysisUsed && parsed.words.length ? Math.min(100, Math.round((spokenCount / parsed.words.length) * 100)) : 0;
+  const pace = voiceAnalysisUsed && state.elapsed ? Math.round((spokenCount / state.elapsed) * 60) : 0;
+  const summary = { duration: state.elapsed, target: activeScript?.target || 0, pace, longestPause, coverage, voiceAnalyzed: voiceAnalysisUsed, estimatedAccuracy: null, reviewLines: [] };
+  try {
+    await send("stop", { elapsed: state.elapsed, summary });
+  } catch (error) {
+    endingSession = false;
+    state.status = "running";
+    startedAt = Date.now() - state.elapsed * 1000;
+    startTimer();
+    updateSession();
+    toast(error.message);
+    return;
+  }
+  if (voiceAnalysisUsed) {
+    try {
+      const accuracy = estimateAccuracy(parsed.words, spokenWords.concat(interimWords));
+      summary.estimatedAccuracy = accuracy.accuracy;
+      summary.reviewLines = accuracy.reviewLines;
+      await send("stop", { elapsed: state.elapsed, summary });
+    } catch (error) {
+      console.error("Unable to calculate estimated accuracy", error);
+    }
+  }
   showSummary(summary);
 }
 
@@ -479,10 +567,10 @@ function startRecognition() { if (!recognition) return enableMicrophone(true); t
 function stopRecognition() { if (recognition) { try { recognition.abort(); } catch (_error) {} } }
 
 function handleRecognition(event) {
-  let interimWords = [];
+  interimWords = [];
   for (let i = event.resultIndex; i < event.results.length; i += 1) {
     const words = normalize(event.results[i][0].transcript);
-    if (event.results[i].isFinal) transcriptBuffer.push(...words);
+    if (event.results[i].isFinal) { transcriptBuffer.push(...words); spokenWords.push(...words); }
     else interimWords = interimWords.concat(words);
   }
   transcriptBuffer = transcriptBuffer.slice(-24);
@@ -542,7 +630,7 @@ $("#paceUp").onclick = () => changePace(5);
 $("#fontDown").onclick = () => changeFont(-4);
 $("#fontUp").onclick = () => changeFont(4);
 $("#endSession").onclick = endSession;
-$("#rehearseAgain").onclick = () => { cancelAutoEnd(); endingSession = false; stopRecognition(); transcriptBuffer = []; longestPause = 0; lastSpeechAt = 0; analysisPosition = -1; voiceAnalysisUsed = false; state.status = "ready"; state.position = 0; state.elapsed = 0; send("load", { script: activeScript }); if (presentationMode() === "classic") send("settings", { settings: { classicAnchor: { position: 0, elapsed: 0 } } }, false); updateSession(); showView($("#sessionView")); };
+$("#rehearseAgain").onclick = () => { cancelAutoEnd(); endingSession = false; stopRecognition(); transcriptBuffer = []; spokenWords = []; interimWords = []; longestPause = 0; lastSpeechAt = 0; analysisPosition = -1; voiceAnalysisUsed = false; state.status = "ready"; state.position = 0; state.elapsed = 0; send("load", { script: activeScript }); if (presentationMode() === "classic") send("settings", { settings: { classicAnchor: { position: 0, elapsed: 0 } } }, false); updateSession(); showView($("#sessionView")); };
 $("#backToScripts").onclick = () => { showView($("#editorView")); loadLibrary(); };
 
 function changeFont(delta) { fontSize = Math.max(28, Math.min(72, fontSize + delta)); $("#fontSize").value = fontSize; savePreferences(); send("settings", { settings: { fontSize } }, false); }

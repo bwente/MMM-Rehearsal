@@ -68,5 +68,10 @@
   "VOICE_ANALYSIS_REQUIRED": "Requise pour le mode Focus",
   "ANALYSIS": "Analyse",
   "VOICE": "Voix",
-  "TIMING_ONLY": "Chronométrage seul"
+  "TIMING_ONLY": "Chronométrage seul",
+  "ESTIMATED_ACCURACY": "Précision estimée",
+  "REVIEW_LINES": "Revoyez ces lignes",
+  "GOOD_PROGRESS": "Beaux progrès.",
+  "KEEP_PRACTICING": "Continuez à vous entraîner.",
+  "TRY_AGAIN": "Essayons encore une fois."
 }

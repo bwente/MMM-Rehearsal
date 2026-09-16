@@ -68,5 +68,10 @@
   "VOICE_ANALYSIS_REQUIRED": "จำเป็นสำหรับโหมดโฟกัส",
   "ANALYSIS": "การวิเคราะห์",
   "VOICE": "เสียง",
-  "TIMING_ONLY": "เวลาเท่านั้น"
+  "TIMING_ONLY": "เวลาเท่านั้น",
+  "ESTIMATED_ACCURACY": "ความแม่นยำโดยประมาณ",
+  "REVIEW_LINES": "ทบทวนบรรทัดเหล่านี้",
+  "GOOD_PROGRESS": "พัฒนาได้ดี",
+  "KEEP_PRACTICING": "ฝึกต่อไป",
+  "TRY_AGAIN": "ลองอีกครั้งกัน"
 }

@@ -16,6 +16,8 @@ All notable changes to MMM-Rehearsal will be documented in this file. This proje
 - Remembered presentation mode, auto-end, speaking-pace, and text-size preferences
 - Focus, Auto, and smooth-scrolling Classic presentation modes
 - Optional voice analysis and speech-based scoring in Auto and Classic modes
+- Estimated script accuracy with up to three suggested lines to review in Rehearsal Studio
+- Configurable MagicMirror visibility locking while a rehearsal is ready or active
 
 ### Changed
 
@@ -23,6 +25,8 @@ All notable changes to MMM-Rehearsal will be documented in this file. This proje
 - Softened focused-section transitions for less distracting movement
 - Timing-only summaries now leave speech-derived metrics ungraded
 - Classic scrolling now uses a stable timing anchor to remove word-update jitter
+- Stop commands now use a dedicated endpoint and freeze the mirror before detailed analysis
+- Rehearsal Studio completion messages now reflect estimated accuracy without punitive language
 
 ## [0.1.0] - 2026-08-26
 

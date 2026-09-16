@@ -1,4 +1,4 @@
-/* global Module, Log */
+/* global Module, Log, MM */
 
 Module.register("MMM-Rehearsal", {
   defaults: {
@@ -12,12 +12,14 @@ Module.register("MMM-Rehearsal", {
     textAlign: "center",
     lineSpacing: 1.35,
     contrast: "high",
+    hideOtherModules: true,
     controllerUrl: ""
   },
 
   start() {
     this.state = { status: "idle", position: 0, elapsed: 0, target: 0, script: null };
     this.parsed = { blocks: [], wordCount: 0 };
+    this.visibilityLocked = false;
     this.timer = setInterval(() => {
       if (this.state.status === "running" && this.state.startedAt) {
         this.state.elapsed = Math.floor((Date.now() - this.state.startedAt) / 1000);
@@ -54,6 +56,7 @@ Module.register("MMM-Rehearsal", {
     const fontChanged = payload.displaySettings?.fontSize !== previous.displaySettings?.fontSize;
     if (scriptChanged) this.parsed = this.parseScript(payload.script?.text || "");
     this.state = payload;
+    this.updateVisibilityLock();
     this.sendNotification("REHEARSAL_STATE", payload);
 
     if (scriptChanged || statusChanged || modeChanged || !this.getRenderedRoot()) {
@@ -83,6 +86,26 @@ Module.register("MMM-Rehearsal", {
 
   getRenderedRoot() {
     return document.getElementById(this.identifier)?.querySelector(".rehearsal") || null;
+  },
+
+  updateVisibilityLock() {
+    const shouldLock = Boolean(this.config.hideOtherModules) && ["ready", "running", "paused"].includes(this.state.status);
+    if (shouldLock === this.visibilityLocked) return;
+    MM.getModules().exceptModule(this).enumerate((module) => {
+      if (shouldLock) module.hide(0, { lockString: this.identifier });
+      else module.show(0, { lockString: this.identifier });
+    });
+    this.visibilityLocked = shouldLock;
+  },
+
+  suspend() {
+    if (!this.visibilityLocked) return;
+    MM.getModules().exceptModule(this).enumerate((module) => module.show(0, { lockString: this.identifier }));
+    this.visibilityLocked = false;
+  },
+
+  resume() {
+    this.updateVisibilityLock();
   },
 
   getFontSize() {

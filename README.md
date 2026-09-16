@@ -51,6 +51,7 @@ let config = {
         showProgress: true,
         showTargetTime: true,
         speechTracking: true,
+        hideOtherModules: true,
         // Recommended if the mirror opens MagicMirror using localhost.
         controllerUrl: "https://magicmirror.local:8080"
       }
@@ -87,8 +88,10 @@ The controller supports:
 - Automatic session recovery after the controller page is reloaded or reopened
 - Remembered presentation mode, auto-end, speaking-pace, and text-size preferences
 - Duration, target, pace, longest-pause, and coverage summary
+- Estimated script accuracy and up to three suggested lines to review in Rehearsal Studio when voice analysis is active
+- Encouraging result messages that reflect the estimated accuracy range
 - Localized mirror and controller interfaces in Bulgarian, Danish, German, English, Spanish, French, Hungarian, Dutch, Russian, and Thai
-- The same scoring summary on both the controller and mirror completion screens
+- A compact scoring summary on the mirror and detailed coaching in Rehearsal Studio
 
 Scripts are stored locally in `data/scripts.json`, which is excluded from version control. Bracketed lines such as `[PAUSE]`, `[SLOW]`, and `[SLIDE: 2]` are displayed as cues and excluded from spoken-word matching.
 
@@ -107,6 +110,7 @@ The mirror uses MagicMirror's configured `language`. The controller follows the 
 | `showProgress` | `true` | Show the thin progress indicator |
 | `showTargetTime` | `true` | Show target beside elapsed time |
 | `showCues` | `true` | Show bracketed cues |
+| `hideOtherModules` | `true` | Hide other modules with a MagicMirror visibility lock while a rehearsal is ready or active |
 | `controllerUrl` | `""` | LAN origin used by the QR code; auto-detected when empty |
 
 ## Development

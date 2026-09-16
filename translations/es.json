@@ -68,5 +68,10 @@
   "VOICE_ANALYSIS_REQUIRED": "Necesario para el modo Enfoque",
   "ANALYSIS": "Análisis",
   "VOICE": "Voz",
-  "TIMING_ONLY": "Solo tiempo"
+  "TIMING_ONLY": "Solo tiempo",
+  "ESTIMATED_ACCURACY": "Precisión estimada",
+  "REVIEW_LINES": "Revisa estas líneas",
+  "GOOD_PROGRESS": "Buen progreso.",
+  "KEEP_PRACTICING": "Sigue practicando.",
+  "TRY_AGAIN": "Intentémoslo de nuevo."
 }

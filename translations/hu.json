@@ -68,5 +68,10 @@
   "VOICE_ANALYSIS_REQUIRED": "A Fókusz módhoz szükséges",
   "ANALYSIS": "Elemzés",
   "VOICE": "Hang",
-  "TIMING_ONLY": "Csak időzítés"
+  "TIMING_ONLY": "Csak időzítés",
+  "ESTIMATED_ACCURACY": "Becsült pontosság",
+  "REVIEW_LINES": "Nézd át ezeket a sorokat",
+  "GOOD_PROGRESS": "Jó haladás.",
+  "KEEP_PRACTICING": "Gyakorolj tovább.",
+  "TRY_AGAIN": "Próbáljuk meg újra."
 }

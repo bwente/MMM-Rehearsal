@@ -68,5 +68,10 @@
   "VOICE_ANALYSIS_REQUIRED": "Required for Focus mode",
   "ANALYSIS": "Analysis",
   "VOICE": "Voice",
-  "TIMING_ONLY": "Timing only"
+  "TIMING_ONLY": "Timing only",
+  "ESTIMATED_ACCURACY": "Estimated accuracy",
+  "REVIEW_LINES": "Review these lines",
+  "GOOD_PROGRESS": "Good progress.",
+  "KEEP_PRACTICING": "Keep practicing.",
+  "TRY_AGAIN": "Let’s try that again."
 }

@@ -68,5 +68,10 @@
   "VOICE_ANALYSIS_REQUIRED": "Für den Fokusmodus erforderlich",
   "ANALYSIS": "Analyse",
   "VOICE": "Stimme",
-  "TIMING_ONLY": "Nur Zeitmessung"
+  "TIMING_ONLY": "Nur Zeitmessung",
+  "ESTIMATED_ACCURACY": "Geschätzte Genauigkeit",
+  "REVIEW_LINES": "Diese Zeilen prüfen",
+  "GOOD_PROGRESS": "Guter Fortschritt.",
+  "KEEP_PRACTICING": "Weiter üben.",
+  "TRY_AGAIN": "Versuchen wir es noch einmal."
 }
