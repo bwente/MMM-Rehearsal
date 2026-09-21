@@ -1,5 +1,6 @@
 node_modules/
 data/scripts.json
+data/rehearsal-theme.css
 data/*.tmp
 .DS_Store
 coverage/

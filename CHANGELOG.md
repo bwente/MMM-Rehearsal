@@ -18,6 +18,7 @@ All notable changes to MMM-Rehearsal will be documented in this file. This proje
 - Optional voice analysis and speech-based scoring in Auto and Classic modes
 - Estimated script accuracy with up to three suggested lines to review in Rehearsal Studio
 - Configurable MagicMirror visibility locking while a rehearsal is ready or active
+- Locally bundled Bootstrap 5.3 controller components and a persistent user theme override
 
 ### Changed
 

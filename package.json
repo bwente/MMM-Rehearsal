@@ -3,18 +3,26 @@
   "version": "0.1.0",
   "description": "A local rehearsal and speech-following teleprompter for MagicMirror²",
   "author": "Brian Wente",
-  "keywords": ["magicmirror", "teleprompter", "rehearsal", "speech-recognition"],
+  "keywords": [
+    "magicmirror",
+    "teleprompter",
+    "rehearsal",
+    "speech-recognition"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bwente/MMM-Rehearsal.git"
   },
   "homepage": "https://github.com/bwente/MMM-Rehearsal#readme",
-  "bugs": { "url": "https://github.com/bwente/MMM-Rehearsal/issues" },
+  "bugs": {
+    "url": "https://github.com/bwente/MMM-Rehearsal/issues"
+  },
   "main": "node_helper.js",
   "scripts": {
     "test": "node --test test/*.test.js"
   },
   "dependencies": {
+    "bootstrap": "^5.3.8",
     "qrcode": "^1.5.4"
   },
   "engines": {

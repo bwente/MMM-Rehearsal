@@ -11,7 +11,7 @@ const expectedLanguages = ["bg", "da", "de", "en", "es", "fr", "hu", "nl", "ru",
 test("all supported languages have exactly the English translation keys", () => {
   const english = JSON.parse(fs.readFileSync(path.join(translationsDir, "en.json"), "utf8"));
   const englishKeys = Object.keys(english).sort();
-  const files = fs.readdirSync(translationsDir).filter((file) => file.endsWith(".json")).map((file) => path.basename(file, ".json")).sort();
+  const files = fs.readdirSync(translationsDir).filter((file) => file.endsWith(".json") && !file.startsWith("._")).map((file) => path.basename(file, ".json")).sort();
   assert.deepEqual(files, expectedLanguages);
 
   for (const language of expectedLanguages) {

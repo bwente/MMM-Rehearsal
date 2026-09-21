@@ -97,6 +97,18 @@ Scripts are stored locally in `data/scripts.json`, which is excluded from versio
 
 The mirror uses MagicMirror's configured `language`. The controller follows the phone or laptop browser language and falls back to English. When browser speech recognition is unavailable, Focus is disabled and Auto or Classic provides a timing-only summary.
 
+## Controller theming
+
+Rehearsal Studio uses Bootstrap 5.3 color tokens and components, with Bootstrap stored locally so the controller does not need internet access. Bootstrap's JavaScript is not loaded.
+
+To customize the controller without changing tracked module files, copy the included example:
+
+```bash
+cp controller/theme.example.css data/rehearsal-theme.css
+```
+
+Edit `data/rehearsal-theme.css`, then reload Rehearsal Studio. The file loads after the built-in styles and is excluded from Git, so normal module updates will not replace personal colors. Start with Bootstrap variables such as `--bs-body-bg`, `--bs-body-color`, `--bs-primary`, `--bs-secondary-color`, and `--bs-border-color`. The example also lists the Rehearsal-specific surface variables.
+
 ## Configuration
 
 | Option | Default | Purpose |

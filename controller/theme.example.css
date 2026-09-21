@@ -1,0 +1,23 @@
+/*
+ * Copy this file to data/rehearsal-theme.css and reload Rehearsal Studio.
+ * The local file is ignored by Git, so module updates will not replace it.
+ */
+[data-bs-theme="dark"] {
+  --bs-body-bg: #0b132b;
+  --bs-body-color: #f8f9fa;
+  --bs-emphasis-color: #f8f9fa;
+  --bs-secondary-color: #a9b5c5;
+  --bs-tertiary-bg: #14213d;
+  --bs-border-color: #33415c;
+  --bs-primary: #5bc0be;
+  --bs-primary-rgb: 91, 192, 190;
+  --bs-link-color: #82d9d7;
+  --bs-link-hover-color: #a5e8e6;
+  --rehearsal-page-glow: #1c315b;
+  --rehearsal-card-bg: rgba(20, 33, 61, 0.94);
+  --rehearsal-control-bg: #0d172c;
+  --rehearsal-control-border: #40516f;
+  --rehearsal-primary-ink: #071417;
+  --rehearsal-primary-hover: #82d9d7;
+  --rehearsal-surface-raised: #1c2c4c;
+}

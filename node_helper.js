@@ -13,6 +13,7 @@ module.exports = NodeHelper.create({
     this.clients = new Set();
     this.dataDir = path.join(__dirname, "data");
     this.scriptsFile = path.join(this.dataDir, "scripts.json");
+    this.themeFile = path.join(this.dataDir, "rehearsal-theme.css");
     fs.mkdirSync(this.dataDir, { recursive: true });
     this.registerRoutes();
   },
@@ -20,6 +21,12 @@ module.exports = NodeHelper.create({
   registerRoutes() {
     const app = this.expressApp;
     app.use("/rehearsal/assets", require("express").static(path.join(__dirname, "controller")));
+    app.use("/rehearsal/vendor/bootstrap", require("express").static(path.join(__dirname, "node_modules", "bootstrap", "dist", "css")));
+    app.get("/rehearsal/theme.css", (_req, res) => {
+      res.set("Cache-Control", "no-cache").type("text/css");
+      if (fs.existsSync(this.themeFile)) return res.sendFile(this.themeFile);
+      return res.send("");
+    });
     app.get("/rehearsal/i18n/:language", (req, res) => {
       const language = String(req.params.language || "en").toLowerCase();
       const supported = ["bg", "da", "de", "en", "es", "fr", "hu", "nl", "ru", "th"];
