@@ -4,7 +4,9 @@ A focused rehearsal screen for MagicMirror².
 
 Write or choose a script on your phone or laptop, then rehearse on the mirror. The mirror shows only what you need while you speak. No account is required, and your scripts stay on your MagicMirror.
 
-![MMM-Rehearsal running on a MagicMirror while the script is managed from a phone](docs/images/mmm-rehearsal-hero.png)
+**Status:** Stable and actively maintained.
+
+![MMM-Rehearsal running on a MagicMirror while the script is managed from a phone](docs/images/screenshot.png)
 
 ## Experience
 
@@ -25,52 +27,39 @@ From your MagicMirror `modules` directory:
 ```bash
 git clone https://github.com/bwente/MMM-Rehearsal.git
 cd MMM-Rehearsal
-npm install --omit=dev
+npm ci --omit=dev
 ```
 
-Enable the built-in HTTPS server and add the module to `config/config.js`. `useHttps` belongs on the top-level MagicMirror configuration—not inside the module's `config` object:
+See [Configuration](#configuration) for the module block. Microphone features also require the HTTPS setup described below.
 
-```js
-let config = {
-  address: "0.0.0.0",
-  port: 8080,
-  useHttps: true,
-  httpsPrivateKey: "/home/pi/MagicMirror/certs/magicmirror-key.pem",
-  httpsCertificate: "/home/pi/MagicMirror/certs/magicmirror-cert.pem",
+## Update
 
-  // Restrict this to your trusted local network as appropriate.
-  ipWhitelist: [],
+From the module directory:
 
-  modules: [
-    {
-      module: "MMM-Rehearsal",
-      position: "fullscreen_above",
-      config: {
-        focusLines: 3,
-        fontSize: 54,
-        showProgress: true,
-        showTargetTime: true,
-        speechTracking: true,
-        hideOtherModules: true,
-        // Recommended if the mirror opens MagicMirror using localhost.
-        controllerUrl: "https://magicmirror.local:8080"
-      }
-    }
-  ]
-};
-
-if (typeof module !== "undefined") { module.exports = config; }
+```bash
+git pull --ff-only
+npm ci --omit=dev
 ```
 
-Replace the certificate paths with the real certificate and private-key paths on your mirror. Restart MagicMirror, then open `https://YOUR-MIRROR:8080/rehearsal` or scan the QR code shown on the mirror.
+Restart MagicMirror after updating.
 
 ## HTTPS and microphone access
 
-Browsers generally allow microphone access only from a secure context. The configuration above uses MagicMirror's built-in HTTPS support. `useHttps: true` also requires valid `httpsPrivateKey` and `httpsCertificate` paths; the certificate must be trusted by the phone or laptop for reliable microphone permission. The editor and manual remote still work over HTTP, but the microphone toggle will explain that HTTPS is required.
+Browsers generally allow microphone access only from a secure context. MagicMirror can provide HTTPS directly. These options belong at the top level of `config/config.js`, not inside the module's `config` object:
+
+```js
+useHttps: true,
+httpsPrivateKey: "/home/pi/MagicMirror/certs/magicmirror-key.pem",
+httpsCertificate: "/home/pi/MagicMirror/certs/magicmirror-cert.pem",
+```
+
+Replace the paths with the real certificate and private-key paths on your mirror. Configure MagicMirror's `address` and `ipWhitelist` for the devices on your trusted local network. The certificate must be trusted by the phone or laptop for reliable microphone permission. The editor and manual remote still work over HTTP, but microphone tracking and voice analysis require HTTPS.
 
 If HTTPS is already terminated by a reverse proxy such as Caddy or nginx, leave MagicMirror's `useHttps` set to `false` and let the proxy provide HTTPS instead. Do not enable TLS in both places unless the proxy is explicitly configured to connect to an HTTPS upstream.
 
 Speech tracking uses your browser's speech recognition. Depending on the browser, recognition may happen on the device or through the browser vendor's service. MMM-Rehearsal does not send or store your audio.
+
+After restarting MagicMirror, open `https://YOUR-MIRROR:8080/rehearsal` or scan the QR code shown on the mirror.
 
 ## Controller
 
@@ -110,6 +99,24 @@ cp controller/theme.example.css data/rehearsal-theme.css
 Edit `data/rehearsal-theme.css`, then reload Rehearsal Studio. The file loads after the built-in styles and is excluded from Git, so normal module updates will not replace personal colors. Start with Bootstrap variables such as `--bs-body-bg`, `--bs-body-color`, `--bs-primary`, `--bs-secondary-color`, and `--bs-border-color`. The example also lists the Rehearsal-specific surface variables.
 
 ## Configuration
+
+Add this block inside the `modules` array in `config/config.js`:
+
+```js
+{
+  module: "MMM-Rehearsal",
+  position: "fullscreen_above",
+  config: {
+    focusLines: 3,
+    fontSize: 54,
+    showProgress: true,
+    showTargetTime: true,
+    hideOtherModules: true
+  }
+},
+```
+
+Focus mode and voice analysis are enabled by default in Rehearsal Studio. Presentation preferences are remembered in that browser.
 
 | Option | Default | Purpose |
 | --- | ---: | --- |

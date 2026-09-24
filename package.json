@@ -1,6 +1,6 @@
 {
   "name": "mmm-rehearsal",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A local rehearsal and speech-following teleprompter for MagicMirror²",
   "author": "Brian Wente",
   "keywords": [
@@ -19,14 +19,20 @@
   },
   "main": "node_helper.js",
   "scripts": {
+    "lint": "eslint",
     "test": "node --test test/*.test.js"
   },
   "dependencies": {
     "bootstrap": "^5.3.8",
     "qrcode": "^1.5.4"
   },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.0.0",
+    "globals": "^17.0.0"
+  },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.21.1 <23 || >=24"
   },
   "license": "MIT"
 }

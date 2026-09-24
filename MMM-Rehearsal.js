@@ -1,5 +1,3 @@
-/* global Module, Log, MM */
-
 Module.register("MMM-Rehearsal", {
   defaults: {
     focusLines: 3,
@@ -7,7 +5,6 @@ Module.register("MMM-Rehearsal", {
     showProgress: true,
     showTargetTime: true,
     showCues: true,
-    speechTracking: true,
     focusPosition: 48,
     textAlign: "center",
     lineSpacing: 1.35,
@@ -132,7 +129,7 @@ Module.register("MMM-Rehearsal", {
         blocks.push({ type: "cue", text: cue[1], start: index, end: index });
         return;
       }
-      (value.match(/[^.!?]+(?:[.!?]+[\"')\]]*|$)/g) || [value]).forEach((part) => {
+      (value.match(/[^.!?]+(?:[.!?]+["')\]]*|$)/g) || [value]).forEach((part) => {
         const sentence = part.trim();
         const count = (sentence.toLowerCase().match(/[\p{L}\p{M}\p{N}']+/gu) || []).length;
         if (!count) return;

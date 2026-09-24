@@ -159,7 +159,7 @@ function parseScript(text) {
     if (!value) return;
     const cue = value.match(/^\s*\[([^\]]+)]\s*$/);
     if (cue) return blocks.push({ type: "cue", text: cue[1], start: index, end: index });
-    (value.match(/[^.!?]+(?:[.!?]+[\"')\]]*|$)/g) || [value]).forEach((part) => {
+    (value.match(/[^.!?]+(?:[.!?]+["')\]]*|$)/g) || [value]).forEach((part) => {
       const sentence = part.trim();
       const tokens = normalize(sentence);
       if (!tokens.length) return;
@@ -602,7 +602,6 @@ $("#jumpForward").onclick = () => movePosition(state.position + 10);
 $("#restart").onclick = restartSession;
 $("#positionSlider").oninput = (event) => movePosition(Number(event.target.value));
 function changePresentationMode() {
-  const mode = presentationMode();
   updateVoiceAnalysisUI();
   if (shouldUseVoiceAnalysis()) enableMicrophone(true);
   else stopRecognition();

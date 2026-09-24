@@ -4,6 +4,8 @@ All notable changes to MMM-Rehearsal will be documented in this file. This proje
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-09-23
+
 ### Added
 
 - Full-screen MagicMirror rehearsal display and local browser controller
@@ -19,6 +21,7 @@ All notable changes to MMM-Rehearsal will be documented in this file. This proje
 - Estimated script accuracy with up to three suggested lines to review in Rehearsal Studio
 - Configurable MagicMirror visibility locking while a rehearsal is ready or active
 - Locally bundled Bootstrap 5.3 controller components and a persistent user theme override
+- Public project documentation, automated linting, dependency updates, and current Node.js CI coverage
 
 ### Changed
 
@@ -28,6 +31,7 @@ All notable changes to MMM-Rehearsal will be documented in this file. This proje
 - Classic scrolling now uses a stable timing anchor to remove word-update jitter
 - Stop commands now use a dedicated endpoint and freeze the mirror before detailed analysis
 - Rehearsal Studio completion messages now reflect estimated accuracy without punitive language
+- Removed the unused `speechTracking` module option; Focus mode and voice analysis remain enabled by default in Rehearsal Studio
 
 ## [0.1.0] - 2026-08-26
 
