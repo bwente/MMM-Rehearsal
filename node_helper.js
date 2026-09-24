@@ -110,7 +110,7 @@ module.exports = NodeHelper.create({
 
   readScripts() {
     try { return JSON.parse(fs.readFileSync(this.scriptsFile, "utf8")); }
-    catch (_error) { return []; }
+    catch { return []; }
   },
 
   writeScripts(scripts) {

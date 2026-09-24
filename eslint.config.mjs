@@ -21,10 +21,8 @@ export default defineConfig([
       sourceType: "commonjs"
     },
     rules: {
-      "no-empty": ["error", { allowEmptyCatch: true }],
       "no-unused-vars": ["error", {
         argsIgnorePattern: "^_",
-        caughtErrorsIgnorePattern: "^_",
         varsIgnorePattern: "^_"
       }]
     }

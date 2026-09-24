@@ -4,6 +4,13 @@ All notable changes to MMM-Rehearsal will be documented in this file. This proje
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-09-24
+
+### Fixed
+
+- Removed unused catch bindings and documented intentionally ignored browser errors for catalogue lint compatibility
+- Declared the package as CommonJS and updated the lint dependencies reported by the module catalogue
+
 ## [1.0.0] - 2026-09-23
 
 ### Added

@@ -43,7 +43,7 @@ function readPreferences() {
     const stored = JSON.parse(localStorage.getItem(preferenceKey) || "{}");
     if (!stored.mode) stored.mode = stored.microphone === false && stored.autoPace ? "auto" : "focus";
     return { ...defaultPreferences, ...stored };
-  } catch (_error) {
+  } catch {
     return { ...defaultPreferences };
   }
 }
@@ -68,7 +68,9 @@ function savePreferences() {
       fontSize,
       paceWpm
     }));
-  } catch (_error) {}
+  } catch {
+    // Preferences remain optional when browser storage is unavailable.
+  }
 }
 
 function presentationMode() {
@@ -563,8 +565,24 @@ async function enableMicrophone(enabled) {
   } catch (error) { $("#micHelp").textContent = error.message; toast(error.message); }
 }
 
-function startRecognition() { if (!recognition) return enableMicrophone(true); try { recognition.start(); voiceAnalysisUsed = true; } catch (_error) {} }
-function stopRecognition() { if (recognition) { try { recognition.abort(); } catch (_error) {} } }
+function startRecognition() {
+  if (!recognition) return enableMicrophone(true);
+  try {
+    recognition.start();
+    voiceAnalysisUsed = true;
+  } catch {
+    // Starting an already active recognizer is harmless.
+  }
+}
+
+function stopRecognition() {
+  if (!recognition) return;
+  try {
+    recognition.abort();
+  } catch {
+    // The recognizer may already be stopped.
+  }
+}
 
 function handleRecognition(event) {
   interimWords = [];
@@ -651,7 +669,7 @@ function connectEvents() {
 }
 
 async function initialize() {
-  try { await loadTranslations(); } catch (_error) { messages = { ...fallbackMessages }; }
+  try { await loadTranslations(); } catch { messages = { ...fallbackMessages }; }
   applyPreferences();
   updateVoiceAnalysisUI();
   await loadLibrary();
